@@ -13,7 +13,7 @@ export const databaseProviders = [
         serviceName: process.env.DB_SERVICE_NAME || 'FREEPDB1',
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         // TODO: QUITAR EN PRODUCCIOÓN (FALSE)
-        synchronize: !!process.env.DB_SYNCRONIZE || true,
+        synchronize: process.env.DB_SYNCRONIZE === 'true',
         logging: process.env.DB_LOGGING === 'true',
       });
 
