@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { Role } from './Role';
+import { Role } from './Role.entity';
 
 @Entity('users')
 export class User {
