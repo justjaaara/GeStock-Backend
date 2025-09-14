@@ -11,6 +11,7 @@ import { User } from 'src/entities/User.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDTO } from './dto/loginDTO';
+import { AuthUser } from './interfaces/auth-user.interface';
 
 @Injectable()
 export class AuthService {
@@ -107,15 +108,19 @@ export class AuthService {
     };
   }
 
-  async validateUser(userId: number): Promise<User | null> {
+  async validateUser(userId: number): Promise<AuthUser | null> {
     const user = await this.userRepository.findOne({
       where: { user_id: userId },
       relations: ['role'],
     });
 
     if (user && user.state_id === 1) {
-      const { ...result } = user;
-      return result;
+      return {
+        id: user.user_id,
+        name: user.name,
+        email: user.email,
+        role: user.role.role_name,
+      };
     }
     return null;
   }
