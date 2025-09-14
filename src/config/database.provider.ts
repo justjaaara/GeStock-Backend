@@ -13,10 +13,16 @@ export const databaseProviders = [
         serviceName: process.env.DB_SERVICE_NAME || 'FREEPDB1',
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         // TODO: QUITAR EN PRODUCCIOÓN (FALSE)
-        synchronize: process.env.DB_SYNCRONIZE === 'true',
+        synchronize: process.env.DB_SYNCHRONIZE === 'true',
         logging: process.env.DB_LOGGING === 'true',
       });
-
+      //TODO: QUITAR ESTE CONSOLELOG
+      console.log('🔑 Oracle creds:', {
+        user: process.env.DB_USERNAME,
+        pass: process.env.DB_PASSWORD ? '***' : undefined,
+        host: process.env.DB_HOST,
+        service: process.env.DB_SERVICE_NAME,
+      });
       return dataSource.initialize();
     },
   },
