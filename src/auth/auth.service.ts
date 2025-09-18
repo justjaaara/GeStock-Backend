@@ -1,4 +1,4 @@
-import { RegisterDTO } from './dto/RegisterDTO';
+import { RegisterDTO } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import {
   ConflictException,
@@ -10,7 +10,7 @@ import { Role } from 'src/entities/Role.entity';
 import { User } from 'src/entities/User.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDTO } from './dto/loginDTO';
+import { LoginDTO } from './dto/login.dto';
 import { AuthUser } from './interfaces/auth-user.interface';
 
 @Injectable()
@@ -60,7 +60,7 @@ export class AuthService {
     };
 
     return {
-      acces_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload),
       user: {
         id: savedUser.user_id,
         name: savedUser.name,
