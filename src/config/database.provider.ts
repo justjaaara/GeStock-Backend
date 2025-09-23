@@ -13,7 +13,8 @@ export const databaseProviders = [
         password: configService.get<string>('DB_PASSWORD'),
         serviceName: configService.get<string>('DB_SERVICE_NAME', 'FREEPDB1'),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-        synchronize: configService.get<boolean>('DB_SYNCHRONIZE', false),
+        synchronize:
+          configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true',
         logging: configService.get<boolean>('DB_LOGGING', false),
       });
       //TODO: QUITAR ESTE CONSOLELOG
