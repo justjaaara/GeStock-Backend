@@ -1,29 +1,30 @@
+import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 
 export const databaseProviders = [
   {
     provide: 'DATA_SOURCE',
-    useFactory: async () => {
+    useFactory: async (configService: ConfigService) => {
       const dataSource = new DataSource({
         type: 'oracle',
-        host: process.env.DB_HOST || 'localhost',
-        port: parseInt(process.env.DB_PORT!, 10) || 1539,
-        username: process.env.DB_USERNAME,
-        password: process.env.DB_PASSWORD,
-        serviceName: process.env.DB_SERVICE_NAME || 'FREEPDB1',
+        host: configService.get<string>('DB_HOST', 'localhost'),
+        port: configService.get<number>('DB_PORT', 1539),
+        username: configService.get<string>('DB_USERNAME'),
+        password: configService.get<string>('DB_PASSWORD'),
+        serviceName: configService.get<string>('DB_SERVICE_NAME', 'FREEPDB1'),
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-        // TODO: QUITAR EN PRODUCCIOÓN (FALSE)
-        synchronize: process.env.DB_SYNCHRONIZE === 'true',
-        logging: process.env.DB_LOGGING === 'true',
+        synchronize: configService.get<boolean>('DB_SYNCHRONIZE', false),
+        logging: configService.get<boolean>('DB_LOGGING', false),
       });
       //TODO: QUITAR ESTE CONSOLELOG
       console.log('🔑 Oracle creds:', {
-        user: process.env.DB_USERNAME,
-        pass: process.env.DB_PASSWORD ? '***' : undefined,
-        host: process.env.DB_HOST,
-        service: process.env.DB_SERVICE_NAME,
+        user: configService.get<string>('DB_USERNAME'),
+        pass: configService.get<string>('DB_PASSWORD') ? '***' : undefined,
+        host: configService.get<string>('DB_HOST'),
+        service: configService.get<string>('DB_SERVICE_NAME'),
       });
       return dataSource.initialize();
     },
+    inject: [ConfigService],
   },
 ];

@@ -13,6 +13,7 @@ import { ConfigModule } from '@nestjs/config';
     DatabaseModule,
     ConfigModule.forRoot({
       isGlobal: true, // hace que las variables env estén disponibles en toda la app
+      envFilePath: '.env',
     }),
   ],
   controllers: [AppController],
