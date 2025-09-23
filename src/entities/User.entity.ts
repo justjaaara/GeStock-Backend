@@ -8,28 +8,34 @@ import {
 import { Exclude } from 'class-transformer';
 import { Role } from './Role.entity';
 
-@Entity('users')
+@Entity({ name: 'USERS' })
 export class User {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'USER_ID' })
   user_id: number;
 
-  @Column({ type: 'varchar', length: 25, nullable: false })
+  @Column({ name: 'NAME', type: 'varchar', length: 25, nullable: false })
   name: string;
 
-  @Column({ type: 'varchar', length: 254, nullable: false, unique: true })
+  @Column({
+    name: 'EMAIL',
+    type: 'varchar',
+    length: 254,
+    nullable: false,
+    unique: true,
+  })
   email: string;
 
-  @Column({ type: 'varchar', length: 60, nullable: false })
+  @Column({ name: 'PASSWORD', type: 'varchar', length: 60, nullable: false })
   @Exclude()
   password: string;
 
-  @Column()
+  @Column({ name: 'STATE_ID' })
   state_id: number;
 
-  @Column()
+  @Column({ name: 'ROLE_ID' })
   role_id: number;
 
   @ManyToOne(() => Role, (role) => role.users)
-  @JoinColumn({ name: 'role_id' })
+  @JoinColumn({ name: 'ROLE_ID' })
   role: Role;
 }

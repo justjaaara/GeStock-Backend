@@ -1,12 +1,12 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from './User.entity';
 
-@Entity('roles')
+@Entity({ name: 'ROLES' })
 export class Role {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'ROLE_ID' })
   role_id: number;
 
-  @Column({ type: 'varchar', length: 20, nullable: false })
+  @Column({ name: 'ROLE_NAME', type: 'varchar', length: 20, nullable: false })
   role_name: string;
 
   @OneToMany(() => User, (user) => user.role)
