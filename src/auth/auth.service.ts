@@ -1,16 +1,16 @@
-import { RegisterDTO } from './dto/register.dto';
-import * as bcrypt from 'bcrypt';
 import {
   ConflictException,
   Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 import { Role } from 'src/entities/Role.entity';
 import { User } from 'src/entities/User.entity';
 import { Repository } from 'typeorm';
-import { JwtService } from '@nestjs/jwt';
 import { LoginDTO } from './dto/login.dto';
+import { RegisterDTO } from './dto/register.dto';
 import { AuthUser } from './interfaces/auth-user.interface';
 
 @Injectable()
@@ -22,7 +22,6 @@ export class AuthService {
     private roleRepository: Repository<Role>,
     private jwtService: JwtService,
   ) {}
-
   async register(RegisterDTO: RegisterDTO) {
     const { name, email, password } = RegisterDTO;
 
