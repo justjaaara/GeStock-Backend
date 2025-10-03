@@ -1,5 +1,34 @@
 # GeStock - Sistema de Gestión de Inventario
 
+## Índice
+
+1. [Descripción del Objetivo](#descripción-del-objetivo)
+   - [Objetivo Principal (MVP)](#objetivo-principal-mvp)
+   - [Alcance Definido](#alcance-definido)
+2. [Funcionamiento de la Aplicación](#funcionamiento-de-la-aplicación)
+3. [Estructura del Proyecto](#estructura-del-proyecto)
+4. [Flujos Desarrollados al momento](#flujos-desarrollados-al-momento)
+   - [1. Sistema de Autenticación Completo](#1-sistema-de-autenticación-completo)
+   - [2. Arquitectura de Navegación](#2-arquitectura-de-navegación)
+5. [Flujos Pendientes (Entrega Final)](#flujos-pendientes-entrega-final)
+   - [1. Administración de Usuarios y Roles](#1-administración-de-usuarios-y-roles-ges-112-ges-117-ges-152-ges-201)
+   - [2. Gestión Completa de Productos](#2-gestión-completa-de-productos-ges-47-ges-58-ges-69-ges-77-ges-85-ges-94-ges-103-ges-131)
+   - [3. Sistema RFID y Control de Lotes](#3-sistema-rfid-y-control-de-lotes-ges-159-ges-160)
+   - [4. Sistema de Alertas y Trazabilidad](#4-sistema-de-alertas-y-trazabilidad-ges-118-ges-119-ges-203)
+   - [5. Módulo de Ventas Básico](#5-módulo-de-ventas-básico-ges-162-ges-164-ges-204-ges-205)
+   - [6. Sistema de Reportes y Consolidados](#6-sistema-de-reportes-y-consolidados-ges-166-ges-167-ges-168-ges-206-ges-211-ges-212)
+   - [7. Cierres Mensuales](#7-cierres-mensuales-ges-213-ges-214-ges-215)
+6. [Modelo de Datos](#modelo-de-datos)
+   - [Entidades del Sistema](#entidades-del-sistema)
+     - [Usuarios y Autenticación](#-usuarios-y-autenticación)
+     - [Productos](#-productos)
+     - [Sistema RFID y Lotes](#-sistema-rfid-y-lotes)
+     - [Control de Inventario](#-control-de-inventario)
+     - [Sistema de Ventas](#-sistema-de-ventas)
+   - [Diagrama de Entidad-Relación](#diagrama-de-entidad-relación)
+
+---
+
 ## Descripción del Objetivo
 
 GeStock es un MVP de sistema web de gestión de inventario diseñado para empresas que necesitan controlar y administrar sus productos de manera eficiente mediante tecnología RFID. La aplicación permite a los usuarios gestionar el inventario en tiempo real, realizar carga masiva de productos, recibir alertas automáticas de stock bajo, y mantener un control detallado con trazabilidad completa de todos los movimientos, incluyendo cierres mensuales automáticos para auditoría histórica.
@@ -41,12 +70,30 @@ Desarrollar un MVP de aplicación web para gestión de inventario que permita:
 
 La aplicación está construida con una arquitectura moderna de frontend-backend separados:
 
-- **Frontend**: Angular 18+ con arquitectura de componentes standalone y signals
-- **Backend**: NestJS con TypeORM y base de datos Oracle
+- **Frontend**: Angular v20.2 con arquitectura de componentes standalone y signals
+- **Backend**: NestJS v11.0.1
+- **ORM**: TypeORM
+- **Base de datos**: Oracle última versión
 - **Autenticación**: JWT (JSON Web Tokens) para seguridad
 - **API**: RESTful API con documentación Swagger
 
-## Flujos Desarrollados (Entrega Actual)
+## Estructura del Proyecto
+
+```
+GeStock-Backend/
+   ├── src/
+   │   ├── auth/                 # Módulo de autenticación
+   │   ├── users/                # Gestión de usuarios
+   │   ├── config/               # Configuración de base de datos
+   │   ├── entities/             # Entidades de TypeORM
+   │   ├── common/               # Utilidades compartidas
+   │   └── main.ts               # Punto de entrada
+   ├── .env                      # Variables de entorno
+   └── package.json
+
+```
+
+## Flujos Desarrollados al momento
 
 ### ✅ 1. Sistema de Autenticación Completo
 
@@ -64,22 +111,15 @@ La aplicación está construida con una arquitectura moderna de frontend-backend
 
 - **Cambio de Contraseña**
   - Validación de contraseña actual
-  - Aplicación de políticas de contraseña fuerte
+  - Validación de contraseña (mínimo 6 caracteres, números y caracteres especiales)
   - Actualización segura en base de datos
 
-### ✅ 2. Sistema de Configuraciones
-
-- **Seguridad y Privacidad**
-  - Cambio de contraseña con validaciones
-  - Configuraciones de seguridad de cuenta
-
-### ✅ 3. Arquitectura de Navegación
+### ✅ 2. Arquitectura de Navegación
 
 - **Sidebar Navegación**
   - Navegación intuitiva por módulos
   - Dashboard principal
   - Acceso rápido a todas las secciones
-
 
 ## Flujos Pendientes (Entrega Final)
 
@@ -152,7 +192,6 @@ La aplicación está construida con una arquitectura moderna de frontend-backend
   - Snapshot automático mensual del inventario (GES-213)
   - Bloqueo de movimientos anteriores al cierre (GES-214)
   - Preservación de integridad histórica
-
 
 ## Modelo de Datos
 
@@ -299,107 +338,12 @@ La aplicación está construida con una arquitectura moderna de frontend-backend
 | Sale_state_id | SERIAL        | Identificador del estado de la venta.    | Llave primaria     |
 | State_name    | VARCHAR(20)   | Nombre del estado (registrada, anulada). | Obligatorio; Único |
 
-### Relaciones del Modelo
+### Diagrama de Entidad-Relación
 
-```
-🔐 SISTEMA DE USUARIOS
-Users ──── Roles (Many-to-One)
-Users ──── User_states (Many-to-One)
+![Diagrama de entidad relación](https://i.imgur.com/292cYSe.png)
 
-📦 SISTEMA DE PRODUCTOS
-Products ──── Product_categories (Many-to-One)
-Products ──── Product_states (Many-to-One)
-Products ──── Measurements_types (Many-to-One)
-
-📊 SISTEMA DE INVENTARIO
-Inventory ──── Products (Many-to-One)
-Inventory ──── Batches (Many-to-One)
-Inventory_movements ──── Products (Many-to-One)
-Inventory_movements ──── Batches (Many-to-One)
-Inventory_movements ──── Users (Many-to-One)
-Inventory_closure ──── Products (Many-to-One)
-Inventory_closure ──── Batches (Many-to-One)
-Inventory_closure ──── Users (Many-to-One)
-
-💰 SISTEMA DE VENTAS
-Sales ──── Sales_states (Many-to-One)
-Sales ──── Users (Many-to-One)
-Sale_detail ──── Sales (Many-to-One)
-Sale_detail ──── Products (Many-to-One)
-
-📦 SISTEMA RFID
-Batches (Independiente con código RFID único)
-```
-
-### Diagrama de Entidad-Relación Conceptual
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│     USERS       │────│     ROLES       │    │  USER_STATES    │
-│                 │    │                 │    │                 │
-│ • User_id (PK)  │    │ • Role_id (PK)  │    │ • State_id (PK) │
-│ • Name          │    │ • Role_name     │    │ • State_name    │
-│ • Email         │    └─────────────────┘    └─────────────────┘
-│ • Password      │
-│ • Role_id (FK)  │
-│ • State_id (FK) │
-└─────────────────┘
-        │
-        │ (1:N)
-        ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ INVENTORY_MOVS  │    │    PRODUCTS     │────│ PRODUCT_CATEG   │
-│                 │────│                 │    │                 │
-│ • Movement_id   │    │ • Product_id    │    │ • Category_id   │
-│ • Product_id    │    │ • Product_name  │    │ • Category_name │
-│ • Lot_id        │    │ • Category_id   │    └─────────────────┘
-│ • Movement_type │    │ • Measurement_id│
-│ • Quantity      │    │ • State_id      │    ┌─────────────────┐
-│ • User_id       │    │ • Unit_price    │────│ MEASUREMENTS    │
-└─────────────────┘    └─────────────────┘    │                 │
-        │                       │             │ • Measurement_id│
-        │                       │             │ • Measure_name  │
-        ▼                       ▼             └─────────────────┘
-┌─────────────────┐    ┌─────────────────┐
-│    BATCHES      │    │   INVENTORY     │
-│                 │    │                 │
-│ • Lot_id (PK)   │────│ • Inventory_id  │
-│ • RFID_code     │    │ • Product_id    │
-│ • Description   │    │ • Lot_id        │
-│ • Entry_date    │    │ • Actual_stock  │
-└─────────────────┘    │ • Minimum_stock │
-                       └─────────────────┘
-```
-
-## Tecnologías Utilizadas
-
-### Backend
-
-- **Framework**: NestJS 11.x
-- **Base de Datos**: Oracle Database con TypeORM
-- **Autenticación**: JWT + Passport
-- **Validación**: class-validator
-- **Documentación**: Swagger/OpenAPI
-- **Seguridad**: bcrypt para hash de contraseñas
-
-
-## Estructura del Proyecto
-
-```
-GeStock-Backend/
-   ├── src/
-   │   ├── auth/                 # Módulo de autenticación
-   │   ├── users/                # Gestión de usuarios
-   │   ├── config/               # Configuración de base de datos
-   │   ├── entities/             # Entidades de TypeORM
-   │   ├── common/               # Utilidades compartidas
-   │   └── main.ts               # Punto de entrada
-   ├── .env                      # Variables de entorno
-   └── package.json
-
-```
+> Puedes acceder al modelo entidad relación con más detalle: https://i.imgur.com/292cYSe.png
 
 **Equipo de Desarrollo**: GeStock Development Team  
 **Versión**: 1.0.0  
-**Fecha**: Octubre 2025  
-**Licencia**: Privada - Uso Académico
+**Fecha**: Octubre 2025
