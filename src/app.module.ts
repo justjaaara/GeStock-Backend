@@ -6,10 +6,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { InventoryModule } from './inventory/inventory.module';
-import { User } from './entities/User.entity';
-import { Role } from './entities/Role.entity';
-import { InventoryView } from './entities/Inventory-view.entity';
-
+import { DatabaseModule } from './config/database.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -39,9 +36,7 @@ import { InventoryView } from './entities/Inventory-view.entity';
           username: configService.get<string>('DB_USERNAME'),
           password: configService.get<string>('DB_PASSWORD'),
           serviceName: configService.get<string>('DB_SERVICE_NAME', 'FREEPDB1'),
-          entities: [User, Role, InventoryView],
-          synchronize:
-            configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true',
+          autoLoadEntities: true,
           logging: configService.get<string>('DB_LOGGING', 'false') === 'true',
           dropSchema: false,
           migrationsRun: false,
@@ -52,6 +47,7 @@ import { InventoryView } from './entities/Inventory-view.entity';
       },
       inject: [ConfigService],
     }),
+    DatabaseModule,
     UsersModule,
     AuthModule,
     InventoryModule,

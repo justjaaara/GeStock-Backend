@@ -1,6 +1,5 @@
 import {
   ConflictException,
-  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -12,13 +11,14 @@ import { Repository } from 'typeorm';
 import { LoginDTO } from './dto/login.dto';
 import { RegisterDTO } from './dto/register.dto';
 import { AuthUser } from './interfaces/auth-user.interface';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject('USER_REPOSITORY')
+    @InjectRepository(User)
     private userRepository: Repository<User>,
-    @Inject('ROLE_REPOSITORY')
+    @InjectRepository(Role)
     private roleRepository: Repository<Role>,
     private jwtService: JwtService,
   ) {}

@@ -1,11 +1,12 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from '../entities/Role.entity';
 
 @Injectable()
 export class SeederService implements OnModuleInit {
   constructor(
-    @Inject('ROLE_REPOSITORY')
+    @InjectRepository(Role)
     private roleRepository: Repository<Role>,
   ) {}
 
