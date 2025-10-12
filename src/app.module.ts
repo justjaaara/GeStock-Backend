@@ -1,24 +1,62 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { DatabaseModule } from './config/database.module';
-import { roleProviders } from './providers/role-providers/role-providers';
-import { UserProviders } from './providers/user-providers/user-providers';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { User } from './entities/User.entity';
+import { Role } from './entities/Role.entity';
+import { InventoryView } from './entities/Inventory-view.entity';
 
 @Module({
   imports: [
-    AuthModule,
-    DatabaseModule,
     ConfigModule.forRoot({
-      isGlobal: true, // hace que las variables env estén disponibles en toda la app
-      envFilePath: '.env',
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => {
+        console.log('🔧 Configuración de Base de Datos:');
+        console.log('DB_HOST:', configService.get<string>('DB_HOST'));
+        console.log('DB_PORT:', configService.get<number>('DB_PORT'));
+        console.log(
+          'DB_SERVICE_NAME:',
+          configService.get<string>('DB_SERVICE_NAME'),
+        );
+        console.log('DB_USERNAME:', configService.get<string>('DB_USERNAME'));
+        console.log(
+          'DB_SYNCHRONIZE:',
+          configService.get<string>('DB_SYNCHRONIZE'),
+        );
+        console.log('DB_LOGGING:', configService.get<string>('DB_LOGGING'));
+
+        return {
+          type: 'oracle',
+          host: configService.get<string>('DB_HOST', 'localhost'),
+          port: configService.get<number>('DB_PORT', 1539),
+          username: configService.get<string>('DB_USERNAME'),
+          password: configService.get<string>('DB_PASSWORD'),
+          serviceName: configService.get<string>('DB_SERVICE_NAME', 'FREEPDB1'),
+          entities: [User, Role, InventoryView],
+          synchronize:
+            configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true',
+          logging: configService.get<string>('DB_LOGGING', 'false') === 'true',
+          dropSchema: false,
+          migrationsRun: false,
+          extra: {
+            trustServerCertificate: true,
+          },
+        };
+      },
+      inject: [ConfigService],
     }),
     UsersModule,
+    AuthModule,
+    InventoryModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ...roleProviders, ...UserProviders],
+  providers: [AppService],
 })
 export class AppModule {}
