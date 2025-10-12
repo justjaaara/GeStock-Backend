@@ -8,7 +8,7 @@ import {
 import { Exclude } from 'class-transformer';
 import { Role } from './Role.entity';
 
-@Entity({ name: 'USER' })
+@Entity({ name: 'USERS' })
 export class User {
   @PrimaryGeneratedColumn({ name: 'USER_ID' })
   user_id: number;
