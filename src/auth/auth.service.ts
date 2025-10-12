@@ -23,7 +23,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
   async register(RegisterDTO: RegisterDTO) {
-    const { name, email, password } = RegisterDTO;
+    const { name, email, password, roleId } = RegisterDTO;
 
     const existingUser = await this.userRepository.findOne({
       where: { email },
@@ -32,20 +32,13 @@ export class AuthService {
       throw new ConflictException('El email ya está registrado');
     }
 
-    const defaultRole = await this.roleRepository.findOne({
-      where: { role_id: 2 },
-    }); // Role_Id 2 = Usuario
-    if (!defaultRole) {
-      throw new Error('Rol por defecto no encontrado');
-    }
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = this.userRepository.create({
       name,
       email,
       password: hashedPassword,
-      role_id: defaultRole.role_id,
+      role_id: roleId,
       state_id: 1,
     });
 
@@ -55,7 +48,7 @@ export class AuthService {
     const payload = {
       sub: savedUser.user_id,
       email: savedUser.email,
-      role: defaultRole.role_name,
+      roleId,
     };
 
     return {
@@ -64,7 +57,7 @@ export class AuthService {
         id: savedUser.user_id,
         name: savedUser.name,
         email: savedUser.email,
-        role: defaultRole.role_name,
+        roleId,
       },
     };
   }
@@ -93,7 +86,7 @@ export class AuthService {
     const payload = {
       sub: user.user_id,
       email: user.email,
-      role: user.role.role_name,
+      roleId: user.role.role_id,
     };
 
     return {
@@ -102,7 +95,7 @@ export class AuthService {
         id: user.user_id,
         name: user.name,
         email: user.email,
-        role: user.role.role_name,
+        roleId: user.role.role_id,
       },
     };
   }

@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsIn,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 import { IsStrongPassword } from '../../common/validators/strong-password.validator';
 
 export class RegisterDTO {
@@ -35,4 +41,9 @@ export class RegisterDTO {
   @IsStrongPassword()
   @MaxLength(50)
   password: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @IsIn([1, 2, 3])
+  roleId: number;
 }
