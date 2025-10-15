@@ -1,16 +1,30 @@
+import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { InventoryModule } from './inventory/inventory.module';
 import { DatabaseModule } from './config/database.module';
+import { EmailModule } from './email/email.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { UsersModule } from './users/users.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+
+    MailerModule.forRoot({
+      transport: {
+        host: process.env.MAIL_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.MAIL_PORT || '587'),
+        secure: true, // true para 465, false para otros puertos
+        auth: {
+          user: process.env.MAIL_USER,
+          pass: process.env.MAIL_PASSWORD,
+        },
+      },
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -37,6 +51,9 @@ import { DatabaseModule } from './config/database.module';
           password: configService.get<string>('DB_PASSWORD'),
           serviceName: configService.get<string>('DB_SERVICE_NAME', 'FREEPDB1'),
           autoLoadEntities: true,
+
+          // synchronize:
+          //   configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
           logging: configService.get<string>('DB_LOGGING', 'false') === 'true',
           dropSchema: false,
           migrationsRun: false,
@@ -51,6 +68,7 @@ import { DatabaseModule } from './config/database.module';
     UsersModule,
     AuthModule,
     InventoryModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

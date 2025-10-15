@@ -2,6 +2,7 @@ import { ViewColumn, ViewEntity } from 'typeorm';
 
 @ViewEntity({
   name: 'VW_INVENTORY_DETAIL',
+  synchronize: false,
 })
 export class InventoryView {
   @ViewColumn({ name: 'CODIGO_PRODUCTO' })
