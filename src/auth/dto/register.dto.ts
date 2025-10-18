@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsIn,
   IsNotEmpty,
+  IsNumber,
   IsString,
   MaxLength,
 } from 'class-validator';
@@ -42,8 +43,13 @@ export class RegisterDTO {
   @MaxLength(50)
   password: string;
 
+  @ApiProperty({
+    description: 'Rol del usuario que se va a crear (debe ser id: 1,2,3)',
+    example: '1',
+    maxItems: 1,
+  })
   @IsNotEmpty()
-  @IsString()
+  @IsNumber()
   @IsIn([1, 2, 3])
   roleId: number;
 }
