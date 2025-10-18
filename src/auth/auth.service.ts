@@ -49,6 +49,7 @@ export class AuthService {
       sub: savedUser.user_id,
       email: savedUser.email,
       roleId,
+      name: savedUser.name,
     };
 
     return {
@@ -87,6 +88,7 @@ export class AuthService {
       sub: user.user_id,
       email: user.email,
       roleId: user.role.role_id,
+      name: user.name,
     };
 
     return {
