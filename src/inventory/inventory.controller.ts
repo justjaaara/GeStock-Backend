@@ -6,9 +6,10 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { InventoryService } from './inventory.service';
-import { InventoryResponseDto } from './dto/inventory-respose.dto';
+import { InventoryResponseDto } from './dto/inventory-response.dto';
+import { PaginationDto, PaginatedResponseDto } from './dto/pagination.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('JWT-auth')
@@ -19,50 +20,93 @@ export class InventoryController {
 
   @Get()
   @ApiOperation({
-    summary: 'Obtener inventario completo',
-    description: 'Retorna todos los productos del inventario con sus detalles',
+    summary: 'Obtener inventario completo paginado',
+    description: 'Retorna todos los productos del inventario con paginación',
+  })
+  @ApiQuery({
+    name: 'page',
+    description: 'Número de página',
+    required: false,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Cantidad de productos por página',
+    required: false,
+    example: 20,
   })
   @ApiResponse({
     status: 200,
     description: 'Inventario obtenido exitosamente',
-    type: [InventoryResponseDto],
+    type: PaginatedResponseDto<InventoryResponseDto>,
   })
-  async getInventory() {
-    return await this.inventoryService.getInvetoryDetail();
+  async getInventory(@Query() paginationDto: PaginationDto) {
+    return await this.inventoryService.getInventoryDetail(paginationDto);
   }
 
   @Get('category')
   @ApiOperation({
-    summary: 'Obtener inventario por categoría',
-    description: 'Retorna productos del inventario filtrados por categoría',
+    summary: 'Obtener inventario por categoría paginado',
+    description:
+      'Retorna productos del inventario filtrados por categoría con paginación',
   })
   @ApiQuery({
-    name: 'name',
+    name: 'categoryName',
     description: 'Nombre de la categoría',
     example: 'Bebidas',
     required: true,
   })
+  @ApiQuery({
+    name: 'page',
+    description: 'Número de página',
+    required: false,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Cantidad de productos por página',
+    required: false,
+    example: 20,
+  })
   @ApiResponse({
     status: 200,
     description: 'Inventario por categoría obtenido exitosamente',
-    type: [InventoryResponseDto],
+    type: PaginatedResponseDto<InventoryResponseDto>,
   })
-  async getInventoryByCategory(@Query('categoryName') category: string) {
-    return await this.inventoryService.getInventoryByCategory(category);
+  async getInventoryByCategory(
+    @Query('categoryName') category: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return await this.inventoryService.getInventoryByCategory(
+      category,
+      paginationDto,
+    );
   }
 
   @Get('low-stock')
   @ApiOperation({
-    summary: 'Obtener productos con stock bajo',
+    summary: 'Obtener productos con stock bajo paginado',
     description:
-      'Retorna productos cuyo stock actual es menor o igual al stock mínimo',
+      'Retorna productos cuyo stock actual es menor o igual al stock mínimo con paginación',
+  })
+  @ApiQuery({
+    name: 'page',
+    description: 'Número de página',
+    required: false,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Cantidad de productos por página',
+    required: false,
+    example: 20,
   })
   @ApiResponse({
     status: 200,
     description: 'Productos con stock bajo obtenidos exitosamente',
-    type: [InventoryResponseDto],
+    type: PaginatedResponseDto<InventoryResponseDto>,
   })
-  async getLowStockProducts() {
-    return await this.inventoryService.getLowStockProducts();
+  async getLowStockProducts(@Query() paginationDto: PaginationDto) {
+    return await this.inventoryService.getLowStockProducts(paginationDto);
   }
 }

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InventoryView } from 'src/entities/Inventory-view.entity';
 import { Repository } from 'typeorm';
+import { PaginationDto, PaginatedResponseDto } from './dto/pagination.dto';
 
 @Injectable()
 export class InventoryService {
@@ -10,25 +11,94 @@ export class InventoryService {
     private readonly inventoryViewRepository: Repository<InventoryView>,
   ) {}
 
-  async getInvetoryDetail() {
-    return await this.inventoryViewRepository.find();
-  }
+  async getInventoryDetail(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponseDto<InventoryView>> {
+    const { page = 1, limit = 20 } = paginationDto;
+    const skip = (page - 1) * limit;
 
-  async getInventoryByCategory(category: string) {
-    const inventoryData = await this.inventoryViewRepository.find({
-      where: {
-        productCategory: category,
+    const [data, totalItems] = await this.inventoryViewRepository.findAndCount({
+      skip,
+      take: limit,
+      order: {
+        productName: 'ASC',
       },
     });
 
-    return inventoryData;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
-  async getLowStockProducts() {
-    const inventoryData = await this.inventoryViewRepository
+  async getInventoryByCategory(
+    category: string,
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponseDto<InventoryView>> {
+    const { page = 1, limit = 20 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [data, totalItems] = await this.inventoryViewRepository.findAndCount({
+      where: {
+        productCategory: category,
+      },
+      skip,
+      take: limit,
+      order: {
+        productName: 'ASC',
+      },
+    });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
+
+  async getLowStockProducts(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponseDto<InventoryView>> {
+    const { page = 1, limit = 20 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.inventoryViewRepository
       .createQueryBuilder('inventory')
       .where('inventory.STOCK_ACTUAL <= inventory.STOCK_MINIMO')
-      .getMany();
-    return inventoryData;
+      .orderBy('inventory.NOMBRE_PRODUCTO', 'ASC');
+
+    const totalItems = await queryBuilder.getCount();
+    const data = await queryBuilder.skip(skip).take(limit).getMany();
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 }
