@@ -48,8 +48,8 @@ import { UsersModule } from './users/users.module';
           serviceName: configService.get<string>('DB_SERVICE_NAME', 'FREEPDB1'),
           autoLoadEntities: true,
 
-          synchronize:
-            configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
+          // synchronize:
+          //   configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true',
           logging: configService.get<string>('DB_LOGGING', 'false') === 'true',
           dropSchema: false,
           migrationsRun: false,
