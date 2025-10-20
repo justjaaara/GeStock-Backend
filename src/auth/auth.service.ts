@@ -1,64 +1,79 @@
-import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/entities/Role.entity';
-import { User } from 'src/entities/User.entity';
+import { UsersService } from 'src/users/users.service'; // ✅ Reutilizar UserService
 import { Repository } from 'typeorm';
 import { LoginDTO } from './dto/login.dto';
 import { RegisterDTO } from './dto/register.dto';
 import { AuthUser } from './interfaces/auth-user.interface';
-import { InjectRepository } from '@nestjs/typeorm';
+import { EmailNotificationService } from './email-notification.service';
+import { AuthUserValidator } from './validators/auth-user.validator';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(Role)
-    private roleRepository: Repository<Role>,
-    private jwtService: JwtService,
-  ) {}
-  async register(RegisterDTO: RegisterDTO) {
-    const { name, email, password, roleId } = RegisterDTO;
+  private readonly logger = new Logger(AuthService.name);
 
-    const existingUser = await this.userRepository.findOne({
-      where: { email },
-    });
+  constructor(
+    private readonly usersService: UsersService, // ✅ Inyectar UserService
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
+    private readonly jwtService: JwtService,
+    private readonly emailService: EmailNotificationService,
+    private configService: ConfigService, // ✅ Inyectar ConfigService
+  ) {}
+
+  async register(RegisterDTO: RegisterDTO) {
+    const { name, email, password } = RegisterDTO;
+
+    this.logger.log(`📝 Intento de registro: ${email}`);
+
+    // ✅ Usar UserService para verificar email
+    const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
       throw new ConflictException('El email ya está registrado');
     }
 
+    const defaultRole = await this.roleRepository.findOne({
+      where: { role_id: 2 },
+    });
+    if (!defaultRole) {
+      throw new Error('Rol por defecto no encontrado');
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = this.userRepository.create({
+    // ✅ Usar UserService para crear usuario
+    const newUser = await this.usersService.create({
       name,
       email,
       password: hashedPassword,
-      role_id: roleId,
+      role_id: defaultRole.role_id,
       state_id: 1,
     });
 
-    const savedUser = await this.userRepository.save(newUser);
+    this.logger.log(`✅ Usuario registrado: ${email}`);
 
-    // Generar JWT
+    // Enviar email de bienvenida
+    this.emailService.sendWelcomeEmail(email, name).catch((err) => {
+      this.logger.error('Error enviando email de bienvenida', err);
+    });
+
     const payload = {
-      sub: savedUser.user_id,
-      email: savedUser.email,
-      roleId,
-      name: savedUser.name,
+      sub: newUser.user_id,
+      email: newUser.email,
+      role: defaultRole.role_name,
     };
 
     return {
       access_token: this.jwtService.sign(payload),
       user: {
-        id: savedUser.user_id,
-        name: savedUser.name,
-        email: savedUser.email,
-        roleId,
+        id: newUser.user_id,
+        name: newUser.name,
+        email: newUser.email,
+        role: defaultRole.role_name,
       },
     };
   }
@@ -66,28 +81,22 @@ export class AuthService {
   async login(loginDTO: LoginDTO) {
     const { email, password } = loginDTO;
 
-    const user = await this.userRepository.findOne({
-      where: { email },
-      relations: ['role'],
-    });
+    this.logger.log(`🔐 Intento de login: ${email}`);
 
-    if (!user) {
-      throw new UnauthorizedException('Credenciales inválidas');
-    }
+    // ✅ Usar UserService
+    const user = await this.usersService.findByEmailWithRole(email);
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Credenciales inválidas');
-    }
+    // ✅ Usar Validator para verificaciones
+    AuthUserValidator.validateUserExists(user);
+    await AuthUserValidator.validatePassword(password, user.password, bcrypt);
+    AuthUserValidator.validateUserActive(user);
 
-    if (user.state_id !== 1) {
-      throw new UnauthorizedException('Usuario inactivo');
-    }
+    this.logger.log(`✅ Login exitoso: ${email}`);
 
     const payload = {
       sub: user.user_id,
       email: user.email,
-      roleId: user.role.role_id,
+      role: user.role.role_name,
       name: user.name,
     };
 
@@ -97,18 +106,16 @@ export class AuthService {
         id: user.user_id,
         name: user.name,
         email: user.email,
-        roleId: user.role.role_id,
+        role: user.role.role_name,
       },
     };
   }
 
   async validateUser(userId: number): Promise<AuthUser | null> {
-    const user = await this.userRepository.findOne({
-      where: { user_id: userId },
-      relations: ['role'],
-    });
+    // ✅ Usar UserService
+    const user = await this.usersService.findActiveUser(userId);
 
-    if (user && user.state_id === 1) {
+    if (user) {
       return {
         id: user.user_id,
         name: user.name,
@@ -116,6 +123,7 @@ export class AuthService {
         role: user.role.role_name,
       };
     }
+
     return null;
   }
 }
