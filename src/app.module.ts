@@ -9,6 +9,7 @@ import { DatabaseModule } from './config/database.module';
 import { createMailConfig } from './config/mail.config';
 import { InventoryModule } from './inventory/inventory.module';
 import { UsersModule } from './users/users.module';
+import { ProductsModule } from './products/products.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -64,6 +65,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     AuthModule,
     InventoryModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
