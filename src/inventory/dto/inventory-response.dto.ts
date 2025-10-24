@@ -30,4 +30,7 @@ export class InventoryResponseDto {
 
   @ApiProperty({ example: 2500.0, description: 'Precio unitario del producto' })
   unitPrice: number;
+
+  @ApiProperty({ example: 'Activo', description: 'Estado actual del producto' })
+  productState: string;
 }

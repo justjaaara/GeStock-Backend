@@ -24,4 +24,7 @@ export class InventoryView {
 
   @ViewColumn({ name: 'PRECIO_UNITARIO' })
   unitPrice: number;
+
+  @ViewColumn({ name: 'ESTADO_PRODUCTO' })
+  productState: string;
 }
