@@ -24,7 +24,11 @@ export class RfidController {
 
     const expected = process.env.RFID_API_TOKEN;
     if (expected) {
-      if (!auth || !auth.startsWith('Bearer ') || auth.split(' ')[1] !== expected) {
+      if (
+        !auth ||
+        !auth.startsWith('Bearer ') ||
+        auth.split(' ')[1] !== expected
+      ) {
         throw new UnauthorizedException();
       }
     }

@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -8,6 +17,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
 import {
@@ -96,5 +106,63 @@ export class ProductsController {
   })
   async getAllMeasurementTypes(): Promise<MeasurementTypeResponseDto[]> {
     return await this.productsService.getAllMeasurementTypes();
+  }
+
+  @Put(':productCode')
+  @ApiOperation({
+    summary: 'Actualizar un producto por código',
+    description:
+      'Actualiza la información de un producto específico. Solo se pueden modificar: nombre, descripción, precio y categoría.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Producto actualizado exitosamente',
+    type: ProductResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Producto no encontrado',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Datos inválidos o categoría no encontrada',
+  })
+  async updateProduct(
+    @Param('productCode') productCode: string,
+    @Body() updateProductDto: UpdateProductDto,
+  ): Promise<ProductResponseDto> {
+    return await this.productsService.updateProduct(
+      productCode,
+      updateProductDto,
+    );
+  }
+
+  @Delete(':productCode')
+  @ApiOperation({
+    summary: 'Eliminar un producto por código',
+    description:
+      'Elimina un producto y todos sus registros de inventario asociados. Esta acción no se puede deshacer.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Producto eliminado exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Producto BEBIDAS-001 eliminado exitosamente',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Producto no encontrado',
+  })
+  async deleteProduct(
+    @Param('productCode') productCode: string,
+  ): Promise<{ message: string }> {
+    return await this.productsService.deleteProduct(productCode);
   }
 }

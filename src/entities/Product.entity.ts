@@ -50,6 +50,14 @@ export class Product {
   })
   createdAt: Date;
 
+  @Column({
+    name: 'UPDATED_AT',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
+
   // Relaciones
   @ManyToOne(() => ProductCategory, (category) => category.products)
   @JoinColumn({ name: 'CATEGORY_ID' })

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Product } from '../entities/Product.entity';
@@ -8,6 +12,7 @@ import { MeasurementType } from '../entities/Measurement-type.entity';
 import { Inventory } from '../entities/Inventory.entity';
 import { Batch } from '../entities/Batches.entity';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
 import {
@@ -107,27 +112,42 @@ export class ProductsService {
     // Normalizar el nombre de la categoría (remover espacios, acentos, convertir a mayúsculas)
     const normalizedCategory = this.normalizeString(categoryName);
 
-    // Obtener el máximo consecutivo de productos en esta categoría
-    const maxProduct = await this.productRepository
+    // Obtener el máximo consecutivo de productos ACTIVOS en esta categoría
+    const maxActiveProduct = await this.productRepository
       .createQueryBuilder('product')
       .where('product.CATEGORY_ID = :categoryId', { categoryId })
+      .andWhere('product.STATE_ID = :activeStateId', { activeStateId: 1 })
       .orderBy('product.PRODUCT_ID', 'DESC')
       .getOne();
 
     let nextConsecutive = 1;
 
-    if (maxProduct && maxProduct.productCode) {
+    if (maxActiveProduct && maxActiveProduct.productCode) {
       // Intentar extraer el número del código existente
-      const codeMatch = maxProduct.productCode.match(/-(\d+)$/);
+      const codeMatch = maxActiveProduct.productCode.match(/-(\d+)$/);
       if (codeMatch) {
         nextConsecutive = parseInt(codeMatch[1], 10) + 1;
       } else {
-        // Si no hay match, contar productos de la categoría
+        // Si no hay match, contar productos ACTIVOS de la categoría
         const count = await this.productRepository.count({
-          where: { categoryId },
+          where: { categoryId, stateId: 1 },
         });
         nextConsecutive = count + 1;
       }
+    }
+
+    // Verificar si existe un producto inactivo con el código que vamos a generar
+    const proposedCode = `${normalizedCategory}-${nextConsecutive.toString().padStart(3, '0')}`;
+    const inactiveProductWithCode = await this.productRepository.findOne({
+      where: {
+        productCode: proposedCode,
+        stateId: 2, // Estado inactivo
+      },
+    });
+
+    // Si existe un producto inactivo con ese código, podemos reutilizarlo
+    if (inactiveProductWithCode) {
+      return proposedCode;
     }
 
     // Formatear el consecutivo con ceros a la izquierda (3 dígitos)
@@ -237,7 +257,8 @@ export class ProductsService {
       stateName: product.state?.stateName,
       actualStock: inventory?.actualStock || 0,
       minimumStock: inventory?.minimumStock || 0,
-      createdAt: new Date(),
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
     };
   }
 
@@ -294,5 +315,128 @@ export class ProductsService {
       measurementId: measurement.measurementId,
       measurementName: measurement.measurementName,
     }));
+  }
+
+  /**
+   * Actualiza un producto por su código
+   */
+  async updateProduct(
+    productCode: string,
+    updateProductDto: UpdateProductDto,
+  ): Promise<ProductResponseDto> {
+    console.log(
+      '🚀 ~ ProductsService ~ updateProduct ~ updateProductDto:',
+      updateProductDto,
+    );
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Buscar el producto por código
+      const product = await this.productRepository.findOne({
+        where: { productCode },
+      });
+
+      if (!product) {
+        throw new NotFoundException(
+          `Producto con código ${productCode} no encontrado`,
+        );
+      }
+
+      // Validar que la nueva categoría exista
+      await this.validateCategory(updateProductDto.categoryId);
+
+      // Actualizar los campos permitidos
+      const updatedProduct = await queryRunner.manager.save(Product, {
+        ...product,
+        productName: updateProductDto.productName,
+        productDescription: updateProductDto.productDescription,
+        unitPrice: updateProductDto.unitPrice,
+        categoryId: updateProductDto.categoryId,
+      });
+
+      await queryRunner.commitTransaction();
+
+      console.log(
+        `✅ Producto actualizado exitosamente: ${updatedProduct.productName} (${productCode})`,
+      );
+
+      // Retornar el producto actualizado con sus relaciones
+      return await this.getProductWithDetails(updatedProduct.productId);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.error('❌ Error al actualizar producto:', error);
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * Elimina un producto por su código (soft delete - cambio de estado a inactivo)
+   */
+  async deleteProduct(productCode: string): Promise<{ message: string }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Buscar el producto por código
+      const product = await this.productRepository.findOne({
+        where: { productCode },
+        relations: ['state'],
+      });
+
+      if (!product) {
+        throw new NotFoundException(
+          `Producto con código ${productCode} no encontrado`,
+        );
+      }
+
+      // Verificar si el producto ya está inactivo
+      if (product.stateId === 2) {
+        throw new BadRequestException(
+          `El producto ${productCode} ya está inactivo`,
+        );
+      }
+
+      // Validar que exista el estado "Inactivo" (ID = 2)
+      const inactiveState = await this.stateRepository.findOne({
+        where: { stateId: 2 },
+      });
+
+      if (!inactiveState) {
+        throw new BadRequestException(
+          'Estado "Inactivo" no encontrado en el sistema',
+        );
+      }
+
+      // Cambiar el estado del producto a inactivo (soft delete)
+      await queryRunner.manager.update(
+        Product,
+        { productId: product.productId },
+        {
+          stateId: 2, // Estado inactivo
+          updatedAt: new Date(),
+        },
+      );
+
+      await queryRunner.commitTransaction();
+
+      console.log(
+        `✅ Producto marcado como inactivo exitosamente: ${product.productName} (${productCode})`,
+      );
+
+      return {
+        message: `Producto ${productCode} marcado como inactivo exitosamente. El código puede ser reutilizado en el futuro.`,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.error('❌ Error al desactivar producto:', error);
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

@@ -25,6 +25,21 @@ export class Inventory {
   @Column({ name: 'MINIMUM_STOCK', nullable: true })
   minimumStock: number;
 
+  @Column({
+    name: 'CREATED_AT',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  createdAt: Date;
+
+  @Column({
+    name: 'UPDATED_AT',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
+
   // Relaciones
   @ManyToOne(() => Product, (product) => product.inventories)
   @JoinColumn({ name: 'PRODUCT_ID' })

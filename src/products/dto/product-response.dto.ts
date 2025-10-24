@@ -51,4 +51,10 @@ export class ProductResponseDto {
     description: 'Fecha de creación',
   })
   createdAt: Date;
+
+  @ApiProperty({
+    example: '2025-10-12T15:30:00Z',
+    description: 'Fecha de última actualización',
+  })
+  updatedAt: Date;
 }
