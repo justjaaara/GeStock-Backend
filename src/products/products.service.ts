@@ -9,6 +9,11 @@ import { Inventory } from '../entities/Inventory.entity';
 import { Batch } from '../entities/Batches.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
+import { CategoryResponseDto } from './dto/category-response.dto';
+import {
+  ProductStateResponseDto,
+  MeasurementTypeResponseDto,
+} from './dto/product-state-response.dto';
 
 @Injectable()
 export class ProductsService {
@@ -234,5 +239,60 @@ export class ProductsService {
       minimumStock: inventory?.minimumStock || 0,
       createdAt: new Date(),
     };
+  }
+
+  /**
+   * Obtiene todas las categorías de productos
+   */
+  async getAllCategories(): Promise<CategoryResponseDto[]> {
+    const categories = await this.categoryRepository.find({
+      order: { categoryName: 'ASC' },
+    });
+
+    return categories.map((category) => ({
+      categoryId: category.categoryId,
+      categoryName: category.categoryName,
+    }));
+  }
+
+  /**
+   * Obtiene el estado de un producto específico por su código
+   */
+  async getProductState(productCode: string): Promise<ProductStateResponseDto> {
+    const product = await this.productRepository.findOne({
+      where: { productCode },
+      relations: ['state'],
+    });
+
+    if (!product) {
+      throw new NotFoundException(
+        `Producto con código ${productCode} no encontrado`,
+      );
+    }
+
+    if (!product.state) {
+      throw new NotFoundException(
+        `El producto con código ${productCode} no tiene un estado asignado`,
+      );
+    }
+
+    return {
+      stateId: product.state.stateId,
+      stateName: product.state.stateName,
+    };
+  }
+
+  /**
+   * Obtiene todos los tipos de medidas
+   */
+  async getAllMeasurementTypes(): Promise<MeasurementTypeResponseDto[]> {
+    const measurements = await this.measurementRepository.find({
+      order: { measurementName: 'ASC' },
+    });
+
+    return measurements.map((measurement) => ({
+      measurementId: measurement.measurementId,
+      measurementName: measurement.measurementName,
+    }));
   }
 }
