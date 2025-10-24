@@ -10,6 +10,8 @@ import { createMailConfig } from './config/mail.config';
 import { InventoryModule } from './inventory/inventory.module';
 import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
+import { RfidModule } from './rfid/rfid.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -66,6 +68,7 @@ import { ProductsModule } from './products/products.module';
     AuthModule,
     InventoryModule,
     ProductsModule,
+    RfidModule,
   ],
   controllers: [AppController],
   providers: [AppService],
