@@ -27,4 +27,10 @@ export class InventoryView {
 
   @ViewColumn({ name: 'ESTADO_PRODUCTO' })
   productState: string;
+
+  @ViewColumn({ name: 'LOT_ID' })
+  lotId: number;
+
+  @ViewColumn({ name: 'TIPO_MEDIDA' })
+  measurementType: string;
 }

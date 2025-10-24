@@ -43,6 +43,13 @@ export class Product {
   @Column({ name: 'STATE_ID', nullable: true })
   stateId: number;
 
+  @Column({
+    name: 'CREATED_AT',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  createdAt: Date;
+
   // Relaciones
   @ManyToOne(() => ProductCategory, (category) => category.products)
   @JoinColumn({ name: 'CATEGORY_ID' })

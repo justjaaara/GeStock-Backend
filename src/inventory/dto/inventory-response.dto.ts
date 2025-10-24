@@ -33,4 +33,17 @@ export class InventoryResponseDto {
 
   @ApiProperty({ example: 'Activo', description: 'Estado actual del producto' })
   productState: string;
+
+  @ApiProperty({
+    example: 123,
+    description: 'ID del lote asociado al producto',
+    nullable: true,
+  })
+  lotId: number;
+
+  @ApiProperty({
+    example: 'Unidad',
+    description: 'Tipo de medida del producto',
+  })
+  measurementType: string;
 }
