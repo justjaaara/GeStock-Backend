@@ -109,4 +109,42 @@ export class InventoryController {
   async getLowStockProducts(@Query() paginationDto: PaginationDto) {
     return await this.inventoryService.getLowStockProducts(paginationDto);
   }
+
+  @Get('filtered')
+  @ApiOperation({
+    summary: 'Obtener productos filtrados',
+    description:
+      'Obtiene productos del inventario filtrados por categoría, nivel de stock y estado.',
+  })
+  @ApiQuery({
+    name: 'categoryName',
+    required: false,
+    type: String,
+    description: 'Nombre de la categoría del producto',
+  })
+  @ApiQuery({
+    name: 'stockLevel',
+    required: false,
+    enum: ['critical', 'low', 'out'],
+    description: 'Nivel de stock: crítico, bajo o sin stock',
+  })
+  @ApiQuery({
+    name: 'state',
+    required: false,
+    enum: ['active', 'inactive'],
+    description: 'Estado del producto: activo o inactivo',
+  })
+  async getFilteredProducts(
+    @Query() paginationDto: PaginationDto,
+    @Query('categoryName') categoryName?: string,
+    @Query('stockLevel') stockLevel?: 'critical' | 'low' | 'out',
+    @Query('state') state?: 'active' | 'inactive',
+  ) {
+    return await this.inventoryService.getFilteredProducts({
+      categoryName,
+      stockLevel,
+      state,
+      paginationDto,
+    });
+  }
 }

@@ -101,4 +101,65 @@ export class InventoryService {
       },
     };
   }
+
+  async getFilteredProducts(filters: {
+    categoryName?: string;
+    stockLevel?: 'critical' | 'low' | 'out';
+    state?: 'active' | 'inactive';
+    paginationDto: PaginationDto;
+  }): Promise<PaginatedResponseDto<InventoryView>> {
+    const { categoryName, stockLevel, state, paginationDto } = filters;
+    const { page = 1, limit = 20 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder =
+      this.inventoryViewRepository.createQueryBuilder('inventory');
+
+    if (categoryName) {
+      queryBuilder.andWhere('inventory.CATEGORIA_PRODUCTO = :categoryName', {
+        categoryName,
+      });
+    }
+
+    if (stockLevel) {
+      if (stockLevel === 'critical') {
+        queryBuilder.andWhere(
+          'inventory.STOCK_ACTUAL = inventory.STOCK_MINIMO',
+        );
+      } else if (stockLevel === 'low') {
+        queryBuilder.andWhere(
+          'inventory.STOCK_ACTUAL <= inventory.STOCK_MINIMO + 5',
+        );
+      } else if (stockLevel === 'out') {
+        queryBuilder.andWhere('inventory.STOCK_ACTUAL = 0');
+      }
+    }
+
+    if (state) {
+      queryBuilder.andWhere('inventory.ESTADO_PRODUCTO = :state', {
+        state: state === 'active' ? 'Activo' : 'Inactivo',
+      });
+    }
+
+    queryBuilder
+      .skip(skip)
+      .take(limit)
+      .orderBy('inventory.NOMBRE_PRODUCTO', 'ASC');
+
+    const [data, totalItems] = await queryBuilder.getManyAndCount();
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
 }
