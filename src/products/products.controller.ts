@@ -93,6 +93,27 @@ export class ProductsController {
     return await this.productsService.getProductState(productCode);
   }
 
+  @Get(':productCode')
+  @ApiOperation({
+    summary: 'Obtener un producto por código',
+    description:
+      'Retorna la información completa de un producto específico incluyendo su inventario actual',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Producto obtenido exitosamente',
+    type: ProductResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Producto no encontrado',
+  })
+  async getProductByCode(
+    @Param('productCode') productCode: string,
+  ): Promise<ProductResponseDto> {
+    return await this.productsService.getProductByCode(productCode);
+  }
+
   @Get('measurement-types')
   @ApiOperation({
     summary: 'Obtener todos los tipos de medidas',

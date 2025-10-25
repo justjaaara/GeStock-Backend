@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { InventoryView } from 'src/entities/Inventory-view.entity';
 import { Repository } from 'typeorm';
 import { PaginationDto, PaginatedResponseDto } from './dto/pagination.dto';
+import { UpdateStockDto } from './dto/update-stock.dto';
 
 @Injectable()
 export class InventoryService {
@@ -161,5 +162,59 @@ export class InventoryService {
         hasPreviousPage: page > 1,
       },
     };
+  }
+
+  async updateStock(
+    updateStockDto: UpdateStockDto,
+  ): Promise<{ message: string }> {
+    const { productId, lotId, quantity, productCode, userId, type } =
+      updateStockDto;
+
+    const connection = this.inventoryViewRepository.manager.connection;
+    const queryRunner = connection.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      if (type === 'ENTRADA') {
+        console.log(
+          '🚀 ~ InventoryService ~ updateStock ~ productId:',
+          productId,
+        );
+        console.log(
+          '🚀 ~ InventoryService ~ updateStock ~ quantity:',
+          quantity,
+        );
+        console.log('🚀 ~ InventoryService ~ updateStock ~ lotId:', lotId);
+        console.log('🚀 ~ InventoryService ~ updateStock ~ userId:', userId);
+        console.log(
+          '🚀 ~ InventoryService ~ updateStock ~ productCode:',
+          productCode,
+        );
+        await queryRunner.query(
+          `BEGIN PKG_CENTRAL.CARGAR_INVENTARIO(:1, :2, :3, :4, :5); END;`,
+          [productId, lotId, quantity, productCode, userId],
+        );
+      } else if (type === 'SALIDA') {
+        await queryRunner.query(
+          `BEGIN PKG_CENTRAL.DESCARGAR_INVENTARIO(:1, :2, :3, :4, :5); END;`,
+          [productId, lotId, quantity, productCode, userId],
+        );
+      } else {
+        throw new Error('Invalid stock update type. Use ENTRADA or SALIDA.');
+      }
+
+      await queryRunner.commitTransaction();
+      const messageType = type === 'ENTRADA' ? 'entrada' : 'salida';
+      return {
+        message: `Stock actualizado exitosamente con ${messageType} de ${quantity} unidades`,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

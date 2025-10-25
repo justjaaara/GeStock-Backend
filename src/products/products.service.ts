@@ -439,4 +439,37 @@ export class ProductsService {
       await queryRunner.release();
     }
   }
+
+  /**
+   * Obtiene un producto específico por su código
+   */
+  async getProductByCode(productCode: string): Promise<ProductResponseDto> {
+    const product = await this.productRepository.findOne({
+      where: { productCode },
+      relations: ['category', 'state', 'measurement', 'inventories'],
+    });
+
+    if (!product) {
+      throw new NotFoundException(
+        `Producto con código ${productCode} no encontrado`,
+      );
+    }
+
+    const inventory = product.inventories[0];
+
+    return {
+      productId: product.productId,
+      productName: product.productName,
+      productDescription: product.productDescription,
+      productCode: product.productCode,
+      unitPrice: Number(product.unitPrice),
+      categoryName: product.category?.categoryName,
+      measurementName: product.measurement?.measurementName,
+      stateName: product.state?.stateName,
+      actualStock: inventory?.actualStock || 0,
+      minimumStock: inventory?.minimumStock || 0,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+    };
+  }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Post, Body } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -10,6 +10,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { InventoryService } from './inventory.service';
 import { InventoryResponseDto } from './dto/inventory-response.dto';
 import { PaginationDto, PaginatedResponseDto } from './dto/pagination.dto';
+import { UpdateStockDto } from './dto/update-stock.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('JWT-auth')
@@ -146,5 +147,33 @@ export class InventoryController {
       state,
       paginationDto,
     });
+  }
+
+  @Post('update-stock')
+  @ApiOperation({
+    summary: 'Actualizar stock de un producto',
+    description:
+      'Realiza una operación de cargue o descargue de inventario para un producto específico',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Stock actualizado exitosamente',
+    schema: {
+      example: {
+        message: 'Stock actualizado exitosamente con entrada de 10 unidades',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Error en la solicitud',
+    schema: {
+      example: {
+        message: 'Stock insuficiente para realizar la operación.',
+      },
+    },
+  })
+  async updateStock(@Body() updateStockDto: UpdateStockDto) {
+    return await this.inventoryService.updateStock(updateStockDto);
   }
 }
