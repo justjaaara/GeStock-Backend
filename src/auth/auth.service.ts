@@ -65,6 +65,7 @@ export class AuthService {
       sub: newUser.user_id,
       email: newUser.email,
       role: defaultRole.role_name,
+      roleId: defaultRole.role_id,
     };
 
     return {
@@ -74,6 +75,7 @@ export class AuthService {
         name: newUser.name,
         email: newUser.email,
         role: defaultRole.role_name,
+        roleId: defaultRole.role_id,
       },
     };
   }
@@ -97,6 +99,7 @@ export class AuthService {
       sub: user.user_id,
       email: user.email,
       role: user.role.role_name,
+      roleId: user.role.role_id,
       name: user.name,
     };
 
@@ -107,6 +110,7 @@ export class AuthService {
         name: user.name,
         email: user.email,
         role: user.role.role_name,
+        roleId: user.role.role_id,
       },
     };
   }
@@ -121,6 +125,7 @@ export class AuthService {
         name: user.name,
         email: user.email,
         role: user.role.role_name,
+        roleId: user.role.role_id,
       };
     }
 

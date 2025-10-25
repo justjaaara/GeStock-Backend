@@ -11,6 +11,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
 import { RfidModule } from './rfid/rfid.module';
+import { HistoricalMovementsModule } from './historical-movements/historical-movements.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { RfidModule } from './rfid/rfid.module';
     InventoryModule,
     ProductsModule,
     RfidModule,
+    HistoricalMovementsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

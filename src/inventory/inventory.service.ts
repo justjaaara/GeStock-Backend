@@ -178,20 +178,6 @@ export class InventoryService {
 
     try {
       if (type === 'ENTRADA') {
-        console.log(
-          '🚀 ~ InventoryService ~ updateStock ~ productId:',
-          productId,
-        );
-        console.log(
-          '🚀 ~ InventoryService ~ updateStock ~ quantity:',
-          quantity,
-        );
-        console.log('🚀 ~ InventoryService ~ updateStock ~ lotId:', lotId);
-        console.log('🚀 ~ InventoryService ~ updateStock ~ userId:', userId);
-        console.log(
-          '🚀 ~ InventoryService ~ updateStock ~ productCode:',
-          productCode,
-        );
         await queryRunner.query(
           `BEGIN PKG_CENTRAL.CARGAR_INVENTARIO(:1, :2, :3, :4, :5); END;`,
           [productId, lotId, quantity, productCode, userId],
