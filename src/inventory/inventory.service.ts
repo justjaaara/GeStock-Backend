@@ -167,8 +167,15 @@ export class InventoryService {
   async updateStock(
     updateStockDto: UpdateStockDto,
   ): Promise<{ message: string }> {
-    const { productId, lotId, quantity, productCode, userId, type } =
-      updateStockDto;
+    const {
+      productId,
+      lotId,
+      quantity,
+      productCode,
+      userId,
+      type,
+      movementReason,
+    } = updateStockDto;
 
     const connection = this.inventoryViewRepository.manager.connection;
     const queryRunner = connection.createQueryRunner();
@@ -179,13 +186,13 @@ export class InventoryService {
     try {
       if (type === 'ENTRADA') {
         await queryRunner.query(
-          `BEGIN PKG_CENTRAL.CARGAR_INVENTARIO(:1, :2, :3, :4, :5); END;`,
-          [productId, lotId, quantity, productCode, userId],
+          `BEGIN PKG_CENTRAL.CARGAR_INVENTARIO(:1, :2, :3, :4, :5, :6); END;`,
+          [productId, lotId, quantity, productCode, userId, movementReason],
         );
       } else if (type === 'SALIDA') {
         await queryRunner.query(
-          `BEGIN PKG_CENTRAL.DESCARGAR_INVENTARIO(:1, :2, :3, :4, :5); END;`,
-          [productId, lotId, quantity, productCode, userId],
+          `BEGIN PKG_CENTRAL.DESCARGAR_INVENTARIO(:1, :2, :3, :4, :5, :6); END;`,
+          [productId, lotId, quantity, productCode, userId, movementReason],
         );
       } else {
         throw new Error('Invalid stock update type. Use ENTRADA or SALIDA.');
@@ -194,7 +201,7 @@ export class InventoryService {
       await queryRunner.commitTransaction();
       const messageType = type === 'ENTRADA' ? 'entrada' : 'salida';
       return {
-        message: `Stock actualizado exitosamente con ${messageType} de ${quantity} unidades`,
+        message: `Stock actualizado exitosamente con ${messageType} de ${quantity} unidades. Razón: ${movementReason}`,
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();

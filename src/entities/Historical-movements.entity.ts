@@ -14,6 +14,9 @@ export class HistoricalMovements {
   @Column({ name: 'MOVEMENT_TYPE', length: 20 })
   movementType: string;
 
+  @Column({ name: 'MOVEMENT_REASON', length: 255, nullable: true })
+  movementReason: string | null;
+
   @Column({ name: 'QUANTITY', type: 'decimal', precision: 10, scale: 2 })
   quantity: number;
 
