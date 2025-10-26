@@ -111,9 +111,12 @@ export class HistoricalMovementsService {
   async getHistoricalMovementsFiltered(filters: {
     productName?: string;
     movementType?: 'ENTRADA' | 'SALIDA';
+    startDate?: Date;
+    endDate?: Date;
     paginationDto: PaginationDto;
   }): Promise<PaginatedResponseDto<HistoricalMovements>> {
-    const { productName, movementType, paginationDto } = filters;
+    const { productName, movementType, startDate, endDate, paginationDto } =
+      filters;
     const { page = 1, limit = 20 } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -137,6 +140,21 @@ export class HistoricalMovementsService {
           movementType,
         },
       );
+    }
+
+    if (startDate) {
+      queryBuilder.andWhere(
+        'historical_movements.MOVEMENT_DATE >= :startDate',
+        {
+          startDate,
+        },
+      );
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere('historical_movements.MOVEMENT_DATE <= :endDate', {
+        endDate,
+      });
     }
 
     queryBuilder

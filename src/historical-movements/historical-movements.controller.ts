@@ -15,6 +15,7 @@ import {
 } from '../inventory/dto/pagination.dto';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { FilterHistoricalMovementsDto } from './dto/filter-historical-movements.dto';
 
 @ApiTags('Historical Movements')
 @ApiBearerAuth('JWT-auth')
@@ -148,31 +149,7 @@ export class HistoricalMovementsController {
   @ApiOperation({
     summary: 'Obtener histórico de movimientos filtrado',
     description:
-      'Obtiene movimientos filtrados por producto y/o tipo de movimiento',
-  })
-  @ApiQuery({
-    name: 'productName',
-    required: false,
-    type: String,
-    description: 'Nombre del producto',
-  })
-  @ApiQuery({
-    name: 'movementType',
-    required: false,
-    enum: ['ENTRADA', 'SALIDA'],
-    description: 'Tipo de movimiento',
-  })
-  @ApiQuery({
-    name: 'page',
-    description: 'Número de página',
-    required: false,
-    example: 1,
-  })
-  @ApiQuery({
-    name: 'limit',
-    description: 'Cantidad de movimientos por página',
-    required: false,
-    example: 20,
+      'Obtiene movimientos filtrados por producto, tipo de movimiento y/o rango de fechas',
   })
   @ApiResponse({
     status: 200,
@@ -183,14 +160,26 @@ export class HistoricalMovementsController {
     description: 'No tiene permisos para acceder a este recurso',
   })
   async getHistoricalMovementsFiltered(
+    @Query() filterDto: FilterHistoricalMovementsDto,
     @Query() paginationDto: PaginationDto,
-    @Query('productName') productName?: string,
-    @Query('movementType') movementType?: 'ENTRADA' | 'SALIDA',
   ) {
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+
+    if (filterDto.startDate) {
+      startDate = new Date(filterDto.startDate);
+    }
+
+    if (filterDto.endDate) {
+      endDate = new Date(filterDto.endDate);
+    }
+
     return await this.historicalMovementsService.getHistoricalMovementsFiltered(
       {
-        productName,
-        movementType,
+        productName: filterDto.productName,
+        movementType: filterDto.movementType,
+        startDate,
+        endDate,
         paginationDto,
       },
     );
