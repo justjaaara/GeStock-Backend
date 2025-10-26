@@ -453,7 +453,7 @@ export class ProductsService {
    */
   async getProductByCode(productCode: string): Promise<ProductResponseDto> {
     const product = await this.productRepository.findOne({
-      where: { productCode },
+      where: { productCode, stateId: 1 }, // Solo productos activos
       relations: ['category', 'state', 'measurement', 'inventories'],
     });
 
