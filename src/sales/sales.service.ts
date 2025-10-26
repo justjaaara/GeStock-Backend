@@ -57,9 +57,9 @@ export class SalesService {
       );
     }
 
-    if (inventory.actualStock < quantity) {
+    if (inventory.currentStock < quantity) {
       throw new BadRequestException(
-        `Stock insuficiente. Stock disponible: ${inventory.actualStock}, Cantidad solicitada: ${quantity}`,
+        `Stock insuficiente. Stock disponible: ${inventory.currentStock}, Cantidad solicitada: ${quantity}`,
       );
     }
 
