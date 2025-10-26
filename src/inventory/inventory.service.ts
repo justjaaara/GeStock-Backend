@@ -4,6 +4,7 @@ import { InventoryView } from 'src/entities/Inventory-view.entity';
 import { Repository } from 'typeorm';
 import { PaginationDto, PaginatedResponseDto } from './dto/pagination.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
+import { MonthlyClosureResponseDto } from './dto/monthly-closure-response.dto';
 
 @Injectable()
 export class InventoryService {
@@ -209,5 +210,72 @@ export class InventoryService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async generateMonthlyClosure(
+    userEmail: string,
+  ): Promise<MonthlyClosureResponseDto> {
+    const connection = this.inventoryViewRepository.manager.connection;
+    const queryRunner = connection.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Set timezone for accurate date handling
+      await queryRunner.query(`ALTER SESSION SET TIME_ZONE = 'America/Bogota'`);
+
+      // Call the stored procedure
+      await queryRunner.query(`BEGIN GENERAR_CIERRE_MENSUAL(:1); END;`, [
+        userEmail,
+      ]);
+
+      await queryRunner.commitTransaction();
+
+      // Get current month and year for response
+      const now = new Date();
+      const month = now.getMonth() + 1; // JavaScript months are 0-indexed
+      const year = now.getFullYear();
+
+      return {
+        message: `Cierre mensual generado exitosamente para ${this.getMonthName(month)} ${year}`,
+        headerId: 0, // This would need to be retrieved from the procedure if needed
+        month,
+        year,
+        createdAt: now,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+
+      // Handle specific Oracle error for duplicate closure
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMessage = (error as { message: string }).message;
+        if (errorMessage.includes('-20001')) {
+          throw new Error('Ya existe un cierre para este mes.');
+        }
+      }
+
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  private getMonthName(month: number): string {
+    const months = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
+    return months[month - 1];
   }
 }

@@ -1,4 +1,12 @@
-import { Controller, Get, Query, UseGuards, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+  Post,
+  Body,
+  Request,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -11,6 +19,8 @@ import { InventoryService } from './inventory.service';
 import { InventoryResponseDto } from './dto/inventory-response.dto';
 import { PaginationDto, PaginatedResponseDto } from './dto/pagination.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
+import { MonthlyClosureResponseDto } from './dto/monthly-closure-response.dto';
+import { AuthUser } from 'src/auth/interfaces/auth-user.interface';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('JWT-auth')
@@ -175,5 +185,35 @@ export class InventoryController {
   })
   async updateStock(@Body() updateStockDto: UpdateStockDto) {
     return await this.inventoryService.updateStock(updateStockDto);
+  }
+
+  @Post('generate-monthly-closure')
+  @ApiOperation({
+    summary: 'Generar cierre mensual del inventario',
+    description:
+      'Crea un cierre mensual del inventario actual. Solo se puede generar un cierre por mes. El usuario se obtiene del token JWT.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Cierre mensual generado exitosamente',
+    type: MonthlyClosureResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Ya existe un cierre para este mes',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'Ya existe un cierre para este mes.',
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autorizado - token inválido o expirado',
+  })
+  async generateMonthlyClosure(@Request() req: { user: AuthUser }) {
+    return await this.inventoryService.generateMonthlyClosure(req.user.email);
   }
 }

@@ -173,13 +173,13 @@ export class SalesService {
     });
 
     // Total de unidades vendidas (suma de cantidades)
-    const totalQuantityResult = (await this.historicalMovementsRepository
+    const totalQuantityResult = await this.historicalMovementsRepository
       .createQueryBuilder('historical_movements')
       .select('SUM(historical_movements.QUANTITY)', 'total')
       .where('historical_movements.MOVEMENT_REASON = :reason', {
         reason: 'VENTA',
       })
-      .getRawOne()) as { total: string } | undefined;
+      .getRawOne();
 
     const totalQuantitySold = totalQuantityResult?.total
       ? parseInt(totalQuantityResult.total)
@@ -196,7 +196,7 @@ export class SalesService {
       .getCount();
 
     // Cantidad vendida hoy
-    const quantityTodayResult = (await this.historicalMovementsRepository
+    const quantityTodayResult = await this.historicalMovementsRepository
       .createQueryBuilder('historical_movements')
       .select('SUM(historical_movements.QUANTITY)', 'total')
       .where('historical_movements.MOVEMENT_REASON = :reason', {
@@ -204,14 +204,14 @@ export class SalesService {
       })
       .andWhere('historical_movements.MOVEMENT_DATE >= :today', { today })
       .andWhere('historical_movements.MOVEMENT_DATE < :tomorrow', { tomorrow })
-      .getRawOne()) as { total: string } | undefined;
+      .getRawOne();
 
     const quantitySoldToday = quantityTodayResult?.total
       ? parseInt(quantityTodayResult.total)
       : 0;
 
     // Producto más vendido
-    const topProductResult = (await this.historicalMovementsRepository
+    const topProductResult = await this.historicalMovementsRepository
       .createQueryBuilder('historical_movements')
       .select('historical_movements.REFERENCE', 'productCode')
       .addSelect('historical_movements.PRODUCT_NAME', 'productName')
@@ -223,9 +223,7 @@ export class SalesService {
       .addGroupBy('historical_movements.PRODUCT_NAME')
       .orderBy('SUM(historical_movements.QUANTITY)', 'DESC')
       .limit(1)
-      .getRawOne()) as
-      | { productCode: string; productName: string; totalQuantity: string }
-      | undefined;
+      .getRawOne();
 
     const topSellingProduct = topProductResult
       ? {
