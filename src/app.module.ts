@@ -12,6 +12,7 @@ import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
 import { RfidModule } from './rfid/rfid.module';
 import { HistoricalMovementsModule } from './historical-movements/historical-movements.module';
+import { SalesModule } from './sales/sales.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { HistoricalMovementsModule } from './historical-movements/historical-mov
     ProductsModule,
     RfidModule,
     HistoricalMovementsModule,
+    SalesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
