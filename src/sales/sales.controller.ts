@@ -48,4 +48,3 @@ export class SalesController {
     return await this.salesService.createSale(createSaleDto, req.user.id);
   }
 }
-
