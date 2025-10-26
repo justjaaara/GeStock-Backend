@@ -184,4 +184,38 @@ export class HistoricalMovementsController {
       },
     );
   }
+
+  @Get('reason/sales')
+  @ApiOperation({
+    summary: 'Obtener histórico de ventas',
+    description:
+      'Retorna todos los movimientos con razón "VENTA" para visualizar el histórico de ventas realizadas',
+  })
+  @ApiQuery({
+    name: 'page',
+    description: 'Número de página',
+    required: false,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Cantidad de movimientos por página',
+    required: false,
+    example: 20,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Histórico de ventas obtenido exitosamente',
+    type: PaginatedResponseDto<HistoricalMovements>,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'No tiene permisos para acceder a este recurso',
+  })
+  async getHistoricalMovementsByReason(@Query() paginationDto: PaginationDto) {
+    return await this.historicalMovementsService.getHistoricalMovementsByReason(
+      'VENTA',
+      paginationDto,
+    );
+  }
 }

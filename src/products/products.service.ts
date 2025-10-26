@@ -11,6 +11,7 @@ import { ProductState } from '../entities/Product-state.entity';
 import { MeasurementType } from '../entities/Measurement-type.entity';
 import { Inventory } from '../entities/Inventory.entity';
 import { Batch } from '../entities/Batches.entity';
+import { InventoryView } from '../entities/Inventory-view.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
@@ -19,6 +20,11 @@ import {
   ProductStateResponseDto,
   MeasurementTypeResponseDto,
 } from './dto/product-state-response.dto';
+import { ProductForSaleDto } from './dto/product-for-sale.dto';
+import {
+  PaginationDto,
+  PaginatedResponseDto,
+} from '../inventory/dto/pagination.dto';
 
 @Injectable()
 export class ProductsService {
@@ -35,6 +41,8 @@ export class ProductsService {
     private readonly inventoryRepository: Repository<Inventory>,
     @InjectRepository(Batch)
     private readonly batchRepository: Repository<Batch>,
+    @InjectRepository(InventoryView)
+    private readonly inventoryViewRepository: Repository<InventoryView>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -470,6 +478,38 @@ export class ProductsService {
       minimumStock: inventory?.minimumStock || 0,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
+    };
+  }
+
+  async getProductsForSale(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponseDto<ProductForSaleDto>> {
+    const { page = 1, limit = 20 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [data, totalItems] = await this.inventoryViewRepository.findAndCount({
+      where: {
+        productState: 'Activo',
+      },
+      skip,
+      take: limit,
+      order: {
+        productName: 'ASC',
+      },
+    });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      data: data as ProductForSaleDto[],
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
     };
   }
 }

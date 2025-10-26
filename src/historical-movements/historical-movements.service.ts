@@ -178,4 +178,36 @@ export class HistoricalMovementsService {
       },
     };
   }
+
+  async getHistoricalMovementsByReason(
+    movementReason: string,
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponseDto<HistoricalMovements>> {
+    const { page = 1, limit = 20 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [data, totalItems] =
+      await this.historicalMovementsRepository.findAndCount({
+        where: { movementReason },
+        skip,
+        take: limit,
+        order: {
+          movementDate: 'DESC',
+        },
+      });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
 }

@@ -6,11 +6,13 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -24,6 +26,11 @@ import {
   ProductStateResponseDto,
   MeasurementTypeResponseDto,
 } from './dto/product-state-response.dto';
+import { ProductForSaleDto } from './dto/product-for-sale.dto';
+import {
+  PaginationDto,
+  PaginatedResponseDto,
+} from '../inventory/dto/pagination.dto';
 
 @ApiTags('Products')
 @ApiBearerAuth('JWT-auth')
@@ -72,7 +79,34 @@ export class ProductsController {
     return await this.productsService.getAllCategories();
   }
 
-  @Get('states/:productCode')
+  @Get('for-sale')
+  @ApiOperation({
+    summary: 'Obtener todos los productos disponibles para vender',
+    description:
+      'Retorna la lista de productos activos disponibles para vender con información de inventario',
+  })
+  @ApiQuery({
+    name: 'page',
+    description: 'Número de página',
+    required: false,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Cantidad de productos por página',
+    required: false,
+    example: 20,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Productos disponibles obtenidos exitosamente',
+    type: PaginatedResponseDto<ProductForSaleDto>,
+  })
+  async getProductsForSale(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResponseDto<ProductForSaleDto>> {
+    return await this.productsService.getProductsForSale(paginationDto);
+  }
   @ApiOperation({
     summary: 'Obtener el estado de un producto específico por código',
     description:
