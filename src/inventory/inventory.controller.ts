@@ -20,6 +20,7 @@ import { InventoryResponseDto } from './dto/inventory-response.dto';
 import { PaginationDto, PaginatedResponseDto } from './dto/pagination.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { MonthlyClosureResponseDto } from './dto/monthly-closure-response.dto';
+import { ClosureHeaderResponseDto } from './dto/closure-header-response.dto';
 import { AuthUser } from 'src/auth/interfaces/auth-user.interface';
 import { InventoryReportSummaryDto } from './dto/inventory-report.dto';
 import { SalesByCategorySummaryDto } from './dto/sales-by-category.dto';
@@ -263,5 +264,36 @@ export class InventoryController {
   })
   async generateIncomeByLotReport(): Promise<IncomeByLotSummaryDto> {
     return await this.inventoryService.generateIncomeByLotReport();
+  }
+
+  @Get('closures')
+  @ApiOperation({
+    summary: 'Obtener todos los cierres de inventario',
+    description:
+      'Retorna todos los cierres mensuales del inventario con paginación, ordenados por fecha descendente',
+  })
+  @ApiQuery({
+    name: 'page',
+    description: 'Número de página',
+    required: false,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Cantidad de cierres por página',
+    required: false,
+    example: 20,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Cierres obtenidos exitosamente',
+    type: PaginatedResponseDto<ClosureHeaderResponseDto>,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autorizado - token inválido o expirado',
+  })
+  async getAllClosures(@Query() paginationDto: PaginationDto) {
+    return await this.inventoryService.getAllClosures(paginationDto);
   }
 }

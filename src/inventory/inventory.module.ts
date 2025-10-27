@@ -6,6 +6,7 @@ import { InventoryView } from 'src/entities/Inventory-view.entity';
 import { InventoryReportView } from 'src/entities/Inventory-report-view.entity';
 import { SalesByCategoryView } from 'src/entities/Sales-by-category-view.entity';
 import { IncomeByLotView } from 'src/entities/Income-by-lot-view.entity';
+import { ClosureHeaderView } from 'src/entities/Closure-header-view.entity';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { IncomeByLotView } from 'src/entities/Income-by-lot-view.entity';
       InventoryReportView,
       SalesByCategoryView,
       IncomeByLotView,
+      ClosureHeaderView,
     ]),
   ],
   controllers: [InventoryController],
