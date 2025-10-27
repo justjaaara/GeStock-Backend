@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Role } from './Role.entity';
+import { UserState } from './User-state.entity';
 
 @Entity({ name: 'USERS' })
 export class User {
@@ -38,4 +39,8 @@ export class User {
   @ManyToOne(() => Role, (role) => role.users)
   @JoinColumn({ name: 'ROLE_ID' })
   role: Role;
+
+  @ManyToOne(() => UserState, (state) => state.users)
+  @JoinColumn({ name: 'STATE_ID' })
+  state: UserState;
 }
