@@ -5,6 +5,9 @@ import * as bcrypt from 'bcrypt';
 import { Role } from '../entities/Role.entity';
 import { UserState } from '../entities/User-state.entity';
 import { User } from '../entities/User.entity';
+import { MeasurementType } from '../entities/Measurement-type.entity';
+import { ProductCategory } from '../entities/Product-category.entity';
+import { ProductState } from '../entities/Product-state.entity';
 
 @Injectable()
 export class SeederService implements OnModuleInit {
@@ -15,11 +18,20 @@ export class SeederService implements OnModuleInit {
     private userStateRepository: Repository<UserState>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(MeasurementType)
+    private measurementTypeRepository: Repository<MeasurementType>,
+    @InjectRepository(ProductCategory)
+    private productCategoryRepository: Repository<ProductCategory>,
+    @InjectRepository(ProductState)
+    private productStateRepository: Repository<ProductState>,
   ) {}
 
   async onModuleInit() {
     await this.seedRoles();
     await this.seedUserStates();
+    await this.seedMeasurementTypes();
+    await this.seedProductCategories();
+    await this.seedProductStates();
     await this.seedAdminUser();
   }
 
@@ -93,6 +105,109 @@ export class SeederService implements OnModuleInit {
       console.log('Seeding de estados de usuario completado');
     } catch (error) {
       console.error('Error en seeding de estados de usuario:', error);
+    }
+  }
+
+  private async seedMeasurementTypes() {
+    try {
+      console.log('Iniciando seeding de tipos de medida...');
+
+      // Verificar si ya existen tipos de medida
+      const existingTypes = await this.measurementTypeRepository.count();
+
+      if (existingTypes > 0) {
+        console.log('Los tipos de medida ya existen, saltando seeding');
+        return;
+      }
+
+      // Crear tipos de medida iniciales
+      const defaultMeasurementTypes = [
+        { measurementName: 'Unidad' },
+        { measurementName: 'Pieza' },
+        { measurementName: 'Caja' },
+        { measurementName: 'Pack' },
+        { measurementName: 'Set' },
+      ];
+
+      for (const typeData of defaultMeasurementTypes) {
+        const measurementType = this.measurementTypeRepository.create(typeData);
+        await this.measurementTypeRepository.save(measurementType);
+        console.log(
+          `Tipo de medida creado: ${measurementType.measurementName} con ID: ${measurementType.measurementId}`,
+        );
+      }
+
+      console.log('Seeding de tipos de medida completado');
+    } catch (error) {
+      console.error('Error en seeding de tipos de medida:', error);
+    }
+  }
+
+  private async seedProductCategories() {
+    try {
+      console.log('Iniciando seeding de categorías de producto...');
+
+      // Verificar si ya existen categorías de producto
+      const existingCategories = await this.productCategoryRepository.count();
+
+      if (existingCategories > 0) {
+        console.log('Las categorías de producto ya existen, saltando seeding');
+        return;
+      }
+
+      // Crear categorías de producto iniciales
+      const defaultCategories = [
+        { categoryName: 'Electrónicos' },
+        { categoryName: 'Computadoras' },
+        { categoryName: 'Accesorios' },
+        { categoryName: 'Móviles' },
+        { categoryName: 'Audio' },
+      ];
+
+      for (const categoryData of defaultCategories) {
+        const category = this.productCategoryRepository.create(categoryData);
+        await this.productCategoryRepository.save(category);
+        console.log(
+          `Categoría de producto creada: ${category.categoryName} con ID: ${category.categoryId}`,
+        );
+      }
+
+      console.log('Seeding de categorías de producto completado');
+    } catch (error) {
+      console.error('Error en seeding de categorías de producto:', error);
+    }
+  }
+
+  private async seedProductStates() {
+    try {
+      console.log('Iniciando seeding de estados de producto...');
+
+      // Verificar si ya existen estados de producto
+      const existingStates = await this.productStateRepository.count();
+
+      if (existingStates > 0) {
+        console.log('Los estados de producto ya existen, saltando seeding');
+        return;
+      }
+
+      // Crear estados de producto iniciales
+      const defaultProductStates = [
+        { stateName: 'Activo' },
+        { stateName: 'Inactivo' },
+        { stateName: 'Descontinuado' },
+      ];
+
+      for (const stateData of defaultProductStates) {
+        const productState = this.productStateRepository.create(stateData);
+        await this.productStateRepository.save(productState);
+        console.log(
+          `Estado de producto creado: ${productState.stateName} con ID: ${productState.stateId}`,
+        );
+      }
+
+      console.log('Seeding de estados de producto completado');
+    } catch (error) {
+      console.error('Error en seeding de estados de producto:', error);
     }
   }
 
