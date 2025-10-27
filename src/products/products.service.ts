@@ -512,4 +512,28 @@ export class ProductsService {
       },
     };
   }
+
+  /**
+   * Obtener estadísticas de productos
+   */
+  async getProductStats(): Promise<{
+    totalProducts: number;
+    activeProducts: number;
+    inactiveProducts: number;
+  }> {
+    const totalProducts = await this.productRepository.count();
+
+    const activeState = await this.getActiveState();
+    const activeProducts = await this.productRepository.count({
+      where: { stateId: activeState.stateId },
+    });
+
+    const inactiveProducts = totalProducts - activeProducts;
+
+    return {
+      totalProducts,
+      activeProducts,
+      inactiveProducts,
+    };
+  }
 }
