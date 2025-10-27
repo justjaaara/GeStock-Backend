@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InventoryView } from 'src/entities/Inventory-view.entity';
 import { InventoryReportView } from 'src/entities/Inventory-report-view.entity';
@@ -280,7 +280,7 @@ export class InventoryService {
       if (error && typeof error === 'object' && 'message' in error) {
         const errorMessage = (error as { message: string }).message;
         if (errorMessage.includes('-20001')) {
-          throw new Error('Ya existe un cierre para este mes.');
+          throw new BadRequestException('Ya existe un cierre para este mes.');
         }
       }
 
