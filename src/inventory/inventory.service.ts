@@ -4,6 +4,7 @@ import { InventoryView } from 'src/entities/Inventory-view.entity';
 import { InventoryReportView } from 'src/entities/Inventory-report-view.entity';
 import { SalesByCategoryView } from 'src/entities/Sales-by-category-view.entity';
 import { IncomeByLotView } from 'src/entities/Income-by-lot-view.entity';
+import { ClosureHeaderView } from 'src/entities/Closure-header-view.entity';
 import { Repository } from 'typeorm';
 import { PaginationDto, PaginatedResponseDto } from './dto/pagination.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
@@ -20,6 +21,7 @@ import {
   IncomeByLotItemDto,
   IncomeByLotSummaryDto,
 } from './dto/income-by-lot.dto';
+import { ClosureHeaderResponseDto } from './dto/closure-header-response.dto';
 
 @Injectable()
 export class InventoryService {
@@ -32,6 +34,8 @@ export class InventoryService {
     private readonly salesByCategoryViewRepository: Repository<SalesByCategoryView>,
     @InjectRepository(IncomeByLotView)
     private readonly incomeByLotViewRepository: Repository<IncomeByLotView>,
+    @InjectRepository(ClosureHeaderView)
+    private readonly closureHeaderViewRepository: Repository<ClosureHeaderView>,
   ) {}
 
   async getInventoryDetail(
@@ -282,6 +286,36 @@ export class InventoryService {
     }
   }
 
+  async getAllClosures(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponseDto<ClosureHeaderResponseDto>> {
+    const { page = 1, limit = 20 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [data, totalItems] =
+      await this.closureHeaderViewRepository.findAndCount({
+        skip,
+        take: limit,
+        order: {
+          closureDate: 'DESC',
+        },
+      });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
+
   private getMonthName(month: number): string {
     const months = [
       'enero',
@@ -435,10 +469,12 @@ export class InventoryService {
     const lots = new Set(items.map((i) => i.lotId));
     const totalLots = lots.size;
     const totalProducts = items.length;
-    const totalUnits = items.reduce((sum, i) => sum + Number(i.currentUnits), 0);
+    const totalUnits = items.reduce(
+      (sum, i) => sum + Number(i.currentUnits),
+      0,
+    );
     const totalValue = items.reduce((sum, i) => sum + Number(i.totalValue), 0);
-    const mostRecentEntry =
-      items.length > 0 ? items[0].entryDate : new Date();
+    const mostRecentEntry = items.length > 0 ? items[0].entryDate : new Date();
 
     // Mapear a DTOs
     const itemsDto: IncomeByLotItemDto[] = items.map((i) => ({
