@@ -13,6 +13,7 @@ import { ProductsModule } from './products/products.module';
 import { RfidModule } from './rfid/rfid.module';
 import { HistoricalMovementsModule } from './historical-movements/historical-movements.module';
 import { SalesModule } from './sales/sales.module';
+import { AlertsModule } from './alerts/alerts.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { SalesModule } from './sales/sales.module';
     RfidModule,
     HistoricalMovementsModule,
     SalesModule,
+    AlertsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
