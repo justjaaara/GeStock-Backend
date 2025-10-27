@@ -6,6 +6,7 @@ import {
   Post,
   Body,
   Request,
+  Param,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -13,6 +14,7 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
+  ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { InventoryService } from './inventory.service';
@@ -25,6 +27,7 @@ import { AuthUser } from 'src/auth/interfaces/auth-user.interface';
 import { InventoryReportSummaryDto } from './dto/inventory-report.dto';
 import { SalesByCategorySummaryDto } from './dto/sales-by-category.dto';
 import { IncomeByLotSummaryDto } from './dto/income-by-lot.dto';
+import { InventoryClosureDetailsResponseDto } from './dto/inventory-closure-details-response.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('JWT-auth')
@@ -295,5 +298,51 @@ export class InventoryController {
   })
   async getAllClosures(@Query() paginationDto: PaginationDto) {
     return await this.inventoryService.getAllClosures(paginationDto);
+  }
+
+  @Get('closures/:headerId/details')
+  @ApiOperation({
+    summary: 'Obtener detalle de un cierre específico',
+    description:
+      'Retorna el detalle completo de un cierre mensual del inventario, incluyendo todos los productos con su stock final, ordenados por nombre de producto',
+  })
+  @ApiParam({
+    name: 'headerId',
+    description: 'ID del encabezado del cierre',
+    example: 123,
+  })
+  @ApiQuery({
+    name: 'page',
+    description: 'Número de página',
+    required: false,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Cantidad de productos por página',
+    required: false,
+    example: 20,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Detalle del cierre obtenido exitosamente',
+    type: PaginatedResponseDto<InventoryClosureDetailsResponseDto>,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autorizado - token inválido o expirado',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Cierre no encontrado',
+  })
+  async getClosureDetails(
+    @Param('headerId') headerId: number,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return await this.inventoryService.getClosureDetails(
+      headerId,
+      paginationDto,
+    );
   }
 }

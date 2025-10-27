@@ -5,6 +5,7 @@ import { InventoryReportView } from 'src/entities/Inventory-report-view.entity';
 import { SalesByCategoryView } from 'src/entities/Sales-by-category-view.entity';
 import { IncomeByLotView } from 'src/entities/Income-by-lot-view.entity';
 import { ClosureHeaderView } from 'src/entities/Closure-header-view.entity';
+import { InventoryClosureDetailsView } from 'src/entities/Inventory-closure-details-view.entity';
 import { Repository } from 'typeorm';
 import { PaginationDto, PaginatedResponseDto } from './dto/pagination.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
@@ -22,6 +23,7 @@ import {
   IncomeByLotSummaryDto,
 } from './dto/income-by-lot.dto';
 import { ClosureHeaderResponseDto } from './dto/closure-header-response.dto';
+import { InventoryClosureDetailsResponseDto } from './dto/inventory-closure-details-response.dto';
 
 @Injectable()
 export class InventoryService {
@@ -36,6 +38,8 @@ export class InventoryService {
     private readonly incomeByLotViewRepository: Repository<IncomeByLotView>,
     @InjectRepository(ClosureHeaderView)
     private readonly closureHeaderViewRepository: Repository<ClosureHeaderView>,
+    @InjectRepository(InventoryClosureDetailsView)
+    private readonly inventoryClosureDetailsViewRepository: Repository<InventoryClosureDetailsView>,
   ) {}
 
   async getInventoryDetail(
@@ -298,6 +302,40 @@ export class InventoryService {
         take: limit,
         order: {
           closureDate: 'DESC',
+        },
+      });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
+
+  async getClosureDetails(
+    headerId: number,
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResponseDto<InventoryClosureDetailsResponseDto>> {
+    const { page = 1, limit = 20 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [data, totalItems] =
+      await this.inventoryClosureDetailsViewRepository.findAndCount({
+        where: {
+          headerId,
+        },
+        skip,
+        take: limit,
+        order: {
+          productName: 'ASC',
         },
       });
 
