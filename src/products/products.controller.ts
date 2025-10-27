@@ -107,6 +107,33 @@ export class ProductsController {
   ): Promise<PaginatedResponseDto<ProductForSaleDto>> {
     return await this.productsService.getProductsForSale(paginationDto);
   }
+
+  @Get('stats')
+  @ApiOperation({
+    summary: 'Obtener estadísticas de productos',
+    description: 'Retorna el total de productos, productos activos e inactivos',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Estadísticas obtenidas exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        totalProducts: { type: 'number', example: 1523 },
+        activeProducts: { type: 'number', example: 1518 },
+        inactiveProducts: { type: 'number', example: 5 },
+      },
+    },
+  })
+  async getProductStats(): Promise<{
+    totalProducts: number;
+    activeProducts: number;
+    inactiveProducts: number;
+  }> {
+    return await this.productsService.getProductStats();
+  }
+
+  @Get('states/:productCode')
   @ApiOperation({
     summary: 'Obtener el estado de un producto específico por código',
     description:
