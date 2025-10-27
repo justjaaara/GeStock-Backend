@@ -16,6 +16,16 @@ import {
 } from '../inventory/dto/pagination.dto';
 import { SalesStatsDto } from './dto/sales-stats.dto';
 
+interface TotalQuantityResult {
+  total: string | null;
+}
+
+interface TopProductResult {
+  productCode: string;
+  productName: string;
+  totalQuantity: string;
+}
+
 @Injectable()
 export class SalesService {
   constructor(
@@ -173,13 +183,14 @@ export class SalesService {
     });
 
     // Total de unidades vendidas (suma de cantidades)
-    const totalQuantityResult = await this.historicalMovementsRepository
-      .createQueryBuilder('historical_movements')
-      .select('SUM(historical_movements.QUANTITY)', 'total')
-      .where('historical_movements.MOVEMENT_REASON = :reason', {
-        reason: 'VENTA',
-      })
-      .getRawOne();
+    const totalQuantityResult: TotalQuantityResult | undefined =
+      await this.historicalMovementsRepository
+        .createQueryBuilder('historical_movements')
+        .select('SUM(historical_movements.QUANTITY)', 'total')
+        .where('historical_movements.MOVEMENT_REASON = :reason', {
+          reason: 'VENTA',
+        })
+        .getRawOne();
 
     const totalQuantitySold = totalQuantityResult?.total
       ? parseInt(totalQuantityResult.total)
@@ -196,34 +207,38 @@ export class SalesService {
       .getCount();
 
     // Cantidad vendida hoy
-    const quantityTodayResult = await this.historicalMovementsRepository
-      .createQueryBuilder('historical_movements')
-      .select('SUM(historical_movements.QUANTITY)', 'total')
-      .where('historical_movements.MOVEMENT_REASON = :reason', {
-        reason: 'VENTA',
-      })
-      .andWhere('historical_movements.MOVEMENT_DATE >= :today', { today })
-      .andWhere('historical_movements.MOVEMENT_DATE < :tomorrow', { tomorrow })
-      .getRawOne();
+    const quantityTodayResult: TotalQuantityResult | undefined =
+      await this.historicalMovementsRepository
+        .createQueryBuilder('historical_movements')
+        .select('SUM(historical_movements.QUANTITY)', 'total')
+        .where('historical_movements.MOVEMENT_REASON = :reason', {
+          reason: 'VENTA',
+        })
+        .andWhere('historical_movements.MOVEMENT_DATE >= :today', { today })
+        .andWhere('historical_movements.MOVEMENT_DATE < :tomorrow', {
+          tomorrow,
+        })
+        .getRawOne();
 
     const quantitySoldToday = quantityTodayResult?.total
       ? parseInt(quantityTodayResult.total)
       : 0;
 
     // Producto más vendido
-    const topProductResult = await this.historicalMovementsRepository
-      .createQueryBuilder('historical_movements')
-      .select('historical_movements.REFERENCE', 'productCode')
-      .addSelect('historical_movements.PRODUCT_NAME', 'productName')
-      .addSelect('SUM(historical_movements.QUANTITY)', 'totalQuantity')
-      .where('historical_movements.MOVEMENT_REASON = :reason', {
-        reason: 'VENTA',
-      })
-      .groupBy('historical_movements.REFERENCE')
-      .addGroupBy('historical_movements.PRODUCT_NAME')
-      .orderBy('SUM(historical_movements.QUANTITY)', 'DESC')
-      .limit(1)
-      .getRawOne();
+    const topProductResult: TopProductResult | undefined =
+      await this.historicalMovementsRepository
+        .createQueryBuilder('historical_movements')
+        .select('historical_movements.REFERENCE', 'productCode')
+        .addSelect('historical_movements.PRODUCT_NAME', 'productName')
+        .addSelect('SUM(historical_movements.QUANTITY)', 'totalQuantity')
+        .where('historical_movements.MOVEMENT_REASON = :reason', {
+          reason: 'VENTA',
+        })
+        .groupBy('historical_movements.REFERENCE')
+        .addGroupBy('historical_movements.PRODUCT_NAME')
+        .orderBy('SUM(historical_movements.QUANTITY)', 'DESC')
+        .limit(1)
+        .getRawOne();
 
     const topSellingProduct = topProductResult
       ? {

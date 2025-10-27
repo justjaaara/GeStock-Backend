@@ -24,6 +24,7 @@ import {
 } from './dto/income-by-lot.dto';
 import { ClosureHeaderResponseDto } from './dto/closure-header-response.dto';
 import { InventoryClosureDetailsResponseDto } from './dto/inventory-closure-details-response.dto';
+import { MovementStatsDto } from './dto/movement-stats.dto';
 
 @Injectable()
 export class InventoryService {
@@ -540,5 +541,84 @@ export class InventoryService {
       mostRecentEntry,
       items: itemsDto,
     };
+  }
+
+  async getMovementStats(): Promise<MovementStatsDto> {
+    const connection = this.inventoryViewRepository.manager.connection;
+    const queryRunner = connection.createQueryRunner();
+
+    await queryRunner.connect();
+
+    try {
+      // Set timezone for accurate date handling
+      await queryRunner.query(`ALTER SESSION SET TIME_ZONE = 'America/Bogota'`);
+
+      // Get current month start and end dates
+      const now = new Date();
+      const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endDate = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      );
+
+      // Query for product with most movements
+      const mostMovedResult = (await queryRunner.query(
+        `
+        SELECT p.PRODUCT_NAME as "productName", COUNT(*) as "movementCount"
+        FROM INVENTORY_MOVEMENTS im
+        JOIN PRODUCTS p ON im.PRODUCT_ID = p.PRODUCT_ID
+        WHERE im.MOVEMENT_DATE BETWEEN :startDate AND :endDate
+        GROUP BY p.PRODUCT_NAME, im.PRODUCT_ID
+        ORDER BY COUNT(*) DESC
+        FETCH FIRST 1 ROWS ONLY
+      `,
+        [startDate, endDate],
+      )) as Array<{
+        productName: string;
+        movementCount: number;
+      }>;
+
+      // Query for product with least movements
+      const leastMovedResult = (await queryRunner.query(
+        `
+        SELECT p.PRODUCT_NAME as "productName", COUNT(*) as "movementCount"
+        FROM INVENTORY_MOVEMENTS im
+        JOIN PRODUCTS p ON im.PRODUCT_ID = p.PRODUCT_ID
+        WHERE im.MOVEMENT_DATE BETWEEN :startDate AND :endDate
+        GROUP BY p.PRODUCT_NAME, im.PRODUCT_ID
+        ORDER BY COUNT(*) ASC
+        FETCH FIRST 1 ROWS ONLY
+      `,
+        [startDate, endDate],
+      )) as Array<{
+        productName: string;
+        movementCount: number;
+      }>;
+
+      const mostMoved = mostMovedResult[0] || {
+        productName: 'N/A',
+        movementCount: 0,
+      };
+      const leastMoved = leastMovedResult[0] || {
+        productName: 'N/A',
+        movementCount: 0,
+      };
+
+      return {
+        mostMovedProduct: mostMoved.productName,
+        mostMovedCount: Number(mostMoved.movementCount),
+        leastMovedProduct: leastMoved.productName,
+        leastMovedCount: Number(leastMoved.movementCount),
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+      };
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

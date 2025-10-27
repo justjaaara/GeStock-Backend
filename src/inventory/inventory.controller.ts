@@ -28,6 +28,7 @@ import { InventoryReportSummaryDto } from './dto/inventory-report.dto';
 import { SalesByCategorySummaryDto } from './dto/sales-by-category.dto';
 import { IncomeByLotSummaryDto } from './dto/income-by-lot.dto';
 import { InventoryClosureDetailsResponseDto } from './dto/inventory-closure-details-response.dto';
+import { MovementStatsDto } from './dto/movement-stats.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('JWT-auth')
@@ -344,5 +345,24 @@ export class InventoryController {
       headerId,
       paginationDto,
     );
+  }
+
+  @Get('movement-stats')
+  @ApiOperation({
+    summary: 'Obtener estadísticas de movimientos del mes en curso',
+    description:
+      'Retorna el producto con más movimientos y el producto con menos movimientos del mes actual.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Estadísticas de movimientos obtenidas exitosamente',
+    type: MovementStatsDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autorizado - token inválido o expirado',
+  })
+  async getMovementStats(): Promise<MovementStatsDto> {
+    return await this.inventoryService.getMovementStats();
   }
 }
