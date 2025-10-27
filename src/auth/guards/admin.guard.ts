@@ -18,7 +18,7 @@ export class AdminGuard implements CanActivate {
     }
 
     // Verificar que el rol sea ADMIN (puede ser role_name o role_id)
-    const isAdmin = user.role === 'ADMIN' || user.role_id === 1;
+    const isAdmin = user.role === 'ADMIN' || user.roleId === 1;
 
     if (!isAdmin) {
       throw new ForbiddenException(
