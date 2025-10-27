@@ -26,6 +26,7 @@ import { RegisterDTO } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserResponseDTO } from './dto/user-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AdminGuard } from './guards/admin.guard';
 import type { AuthRequest } from './interfaces/request.interface';
 
 @ApiTags('Authentication')
@@ -36,14 +37,18 @@ export class AuthController {
     private passwordResetService: PasswordResetService,
   ) {}
 
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Post('register')
-  @ApiOperation({ summary: 'Registrar nuevo usuario' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Registrar nuevo usuario (solo administradores)' })
   @ApiResponse({
     status: 201,
     description: 'Usuario registrado exitosamente',
     type: AuthResponseDTO,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  @ApiResponse({ status: 401, description: 'No autenticado' })
+  @ApiResponse({ status: 403, description: 'No autorizado (solo admins)' })
   @ApiResponse({ status: 409, description: 'Email ya registrado' })
   @ApiBody({ type: RegisterDTO })
   async register(@Body(ValidationPipe) registerDTO: RegisterDTO) {
