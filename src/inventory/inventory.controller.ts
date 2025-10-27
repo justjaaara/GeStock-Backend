@@ -21,6 +21,9 @@ import { PaginationDto, PaginatedResponseDto } from './dto/pagination.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { MonthlyClosureResponseDto } from './dto/monthly-closure-response.dto';
 import { AuthUser } from 'src/auth/interfaces/auth-user.interface';
+import { InventoryReportSummaryDto } from './dto/inventory-report.dto';
+import { SalesByCategorySummaryDto } from './dto/sales-by-category.dto';
+import { IncomeByLotSummaryDto } from './dto/income-by-lot.dto';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('JWT-auth')
@@ -215,5 +218,50 @@ export class InventoryController {
   })
   async generateMonthlyClosure(@Request() req: { user: AuthUser }) {
     return await this.inventoryService.generateMonthlyClosure(req.user.email);
+  }
+
+  @Get('report')
+  @ApiOperation({
+    summary: 'Generar reporte general de inventario',
+    description:
+      'Genera un reporte completo del inventario con unidades disponibles por producto. Historia de Usuario: GES-166',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Reporte generado exitosamente',
+    type: InventoryReportSummaryDto,
+  })
+  async generateInventoryReport(): Promise<InventoryReportSummaryDto> {
+    return await this.inventoryService.generateInventoryReport();
+  }
+
+  @Get('report/sales-by-category')
+  @ApiOperation({
+    summary: 'Generar reporte de productos vendidos por categoría',
+    description:
+      'Genera un reporte de productos vendidos agrupados por categoría para entender la demanda. Historia de Usuario: GES-167',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Reporte de ventas por categoría generado exitosamente',
+    type: SalesByCategorySummaryDto,
+  })
+  async generateSalesByCategoryReport(): Promise<SalesByCategorySummaryDto> {
+    return await this.inventoryService.generateSalesByCategoryReport();
+  }
+
+  @Get('report/income-by-lot')
+  @ApiOperation({
+    summary: 'Generar reporte de ingresos por lote',
+    description:
+      'Genera un reporte de ingresos por lote para conocer cuándo y qué productos entraron. Historia de Usuario: GES-168',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Reporte de ingresos por lote generado exitosamente',
+    type: IncomeByLotSummaryDto,
+  })
+  async generateIncomeByLotReport(): Promise<IncomeByLotSummaryDto> {
+    return await this.inventoryService.generateIncomeByLotReport();
   }
 }

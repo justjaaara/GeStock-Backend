@@ -3,9 +3,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { InventoryService } from './inventory.service';
 import { InventoryController } from './inventory.controller';
 import { InventoryView } from 'src/entities/Inventory-view.entity';
+import { InventoryReportView } from 'src/entities/Inventory-report-view.entity';
+import { SalesByCategoryView } from 'src/entities/Sales-by-category-view.entity';
+import { IncomeByLotView } from 'src/entities/Income-by-lot-view.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([InventoryView])],
+  imports: [
+    TypeOrmModule.forFeature([
+      InventoryView,
+      InventoryReportView,
+      SalesByCategoryView,
+      IncomeByLotView,
+    ]),
+  ],
   controllers: [InventoryController],
   providers: [InventoryService],
 })

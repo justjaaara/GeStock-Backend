@@ -1,16 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InventoryView } from 'src/entities/Inventory-view.entity';
+import { InventoryReportView } from 'src/entities/Inventory-report-view.entity';
+import { SalesByCategoryView } from 'src/entities/Sales-by-category-view.entity';
+import { IncomeByLotView } from 'src/entities/Income-by-lot-view.entity';
 import { Repository } from 'typeorm';
 import { PaginationDto, PaginatedResponseDto } from './dto/pagination.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { MonthlyClosureResponseDto } from './dto/monthly-closure-response.dto';
+import {
+  InventoryReportDto,
+  InventoryReportSummaryDto,
+} from './dto/inventory-report.dto';
+import {
+  SalesByCategoryProductDto,
+  SalesByCategorySummaryDto,
+} from './dto/sales-by-category.dto';
+import {
+  IncomeByLotItemDto,
+  IncomeByLotSummaryDto,
+} from './dto/income-by-lot.dto';
 
 @Injectable()
 export class InventoryService {
   constructor(
     @InjectRepository(InventoryView)
     private readonly inventoryViewRepository: Repository<InventoryView>,
+    @InjectRepository(InventoryReportView)
+    private readonly inventoryReportViewRepository: Repository<InventoryReportView>,
+    @InjectRepository(SalesByCategoryView)
+    private readonly salesByCategoryViewRepository: Repository<SalesByCategoryView>,
+    @InjectRepository(IncomeByLotView)
+    private readonly incomeByLotViewRepository: Repository<IncomeByLotView>,
   ) {}
 
   async getInventoryDetail(
@@ -277,5 +298,173 @@ export class InventoryService {
       'diciembre',
     ];
     return months[month - 1];
+  }
+
+  /**
+   * Generar reporte general de inventario
+   * Historia de Usuario: GES-166
+   */
+  async generateInventoryReport(): Promise<InventoryReportSummaryDto> {
+    // Obtener todos los productos del reporte
+    const products = await this.inventoryReportViewRepository.find({
+      order: {
+        categoryName: 'ASC',
+        productName: 'ASC',
+      },
+    });
+
+    // Calcular resumen
+    const totalProducts = products.length;
+    const totalUnits = products.reduce(
+      (sum, p) => sum + Number(p.availableUnits),
+      0,
+    );
+    const totalInventoryValue = products.reduce(
+      (sum, p) => sum + Number(p.totalValue),
+      0,
+    );
+    const lowStockProducts = products.filter(
+      (p) => Number(p.availableUnits) <= Number(p.minimumStock),
+    ).length;
+
+    // Mapear a DTOs
+    const productsDto: InventoryReportDto[] = products.map((p) => ({
+      productId: p.productId,
+      productCode: p.productCode,
+      productName: p.productName,
+      productDescription: p.productDescription,
+      categoryName: p.categoryName,
+      productState: p.productState,
+      measurementName: p.measurementName,
+      availableUnits: Number(p.availableUnits),
+      minimumStock: Number(p.minimumStock),
+      unitPrice: Number(p.unitPrice),
+      totalValue: Number(p.totalValue),
+      lotCode: p.lotCode,
+      lastUpdate: p.lastUpdate,
+    }));
+
+    return {
+      totalProducts,
+      totalUnits,
+      totalInventoryValue,
+      lowStockProducts,
+      products: productsDto,
+    };
+  }
+
+  /**
+   * Generar reporte de productos vendidos por categoría
+   * Historia de Usuario: GES-167
+   */
+  async generateSalesByCategoryReport(): Promise<SalesByCategorySummaryDto> {
+    const products = await this.salesByCategoryViewRepository.find({
+      order: {
+        categoryName: 'ASC',
+        unitsSold: 'DESC',
+      },
+    });
+
+    // Calcular resumen
+    const categories = new Set(products.map((p) => p.categoryName));
+    const totalCategories = categories.size;
+    const totalProducts = products.length;
+    const totalUnitsSold = products.reduce(
+      (sum, p) => sum + Number(p.unitsSold),
+      0,
+    );
+    const totalSalesValue = products.reduce(
+      (sum, p) => sum + Number(p.totalSalesValue),
+      0,
+    );
+
+    // Encontrar categoría con más ventas
+    const categorySales = new Map<string, number>();
+    products.forEach((p) => {
+      const current = categorySales.get(p.categoryName) || 0;
+      categorySales.set(p.categoryName, current + Number(p.totalSalesValue));
+    });
+
+    let topCategory = '';
+    let maxSales = 0;
+    categorySales.forEach((sales, category) => {
+      if (sales > maxSales) {
+        maxSales = sales;
+        topCategory = category;
+      }
+    });
+
+    // Mapear a DTOs
+    const productsDto: SalesByCategoryProductDto[] = products.map((p) => ({
+      categoryId: p.categoryId,
+      categoryName: p.categoryName,
+      productId: p.productId,
+      productCode: p.productCode,
+      productName: p.productName,
+      currentStock: Number(p.currentStock),
+      minimumStock: Number(p.minimumStock),
+      unitPrice: Number(p.unitPrice),
+      unitsSold: Number(p.unitsSold),
+      totalSalesValue: Number(p.totalSalesValue),
+      lastUpdate: p.lastUpdate,
+    }));
+
+    return {
+      totalCategories,
+      totalProducts,
+      totalUnitsSold,
+      totalSalesValue,
+      topCategory,
+      products: productsDto,
+    };
+  }
+
+  /**
+   * Generar reporte de ingresos por lote
+   * Historia de Usuario: GES-168
+   */
+  async generateIncomeByLotReport(): Promise<IncomeByLotSummaryDto> {
+    const items = await this.incomeByLotViewRepository.find({
+      order: {
+        entryDate: 'DESC',
+        categoryName: 'ASC',
+      },
+    });
+
+    // Calcular resumen
+    const lots = new Set(items.map((i) => i.lotId));
+    const totalLots = lots.size;
+    const totalProducts = items.length;
+    const totalUnits = items.reduce((sum, i) => sum + Number(i.currentUnits), 0);
+    const totalValue = items.reduce((sum, i) => sum + Number(i.totalValue), 0);
+    const mostRecentEntry =
+      items.length > 0 ? items[0].entryDate : new Date();
+
+    // Mapear a DTOs
+    const itemsDto: IncomeByLotItemDto[] = items.map((i) => ({
+      lotId: i.lotId,
+      lotCode: i.lotCode,
+      lotDescription: i.lotDescription,
+      entryDate: i.entryDate,
+      productId: i.productId,
+      productCode: i.productCode,
+      productName: i.productName,
+      categoryName: i.categoryName,
+      measurementName: i.measurementName,
+      currentUnits: Number(i.currentUnits),
+      unitPrice: Number(i.unitPrice),
+      totalValue: Number(i.totalValue),
+      productState: i.productState,
+      lastUpdate: i.lastUpdate,
+    }));
+
+    return {
+      totalLots,
+      totalProducts,
+      totalUnits,
+      totalValue,
+      mostRecentEntry,
+      items: itemsDto,
+    };
   }
 }
