@@ -87,10 +87,10 @@ export class SeederService implements OnModuleInit {
       // Crear estados de usuario iniciales
       const defaultStates = [
         {
-          stateName: 'Activo',
+          stateName: 'ACTIVO',
         },
         {
-          stateName: 'Inactivo',
+          stateName: 'INACTIVO',
         },
       ];
 
@@ -192,9 +192,9 @@ export class SeederService implements OnModuleInit {
 
       // Crear estados de producto iniciales
       const defaultProductStates = [
-        { stateName: 'Activo' },
-        { stateName: 'Inactivo' },
-        { stateName: 'Descontinuado' },
+        { stateName: 'ACTIVO' },
+        { stateName: 'INACTIVO' },
+        { stateName: 'DESCONTINUADO' },
       ];
 
       for (const stateData of defaultProductStates) {
@@ -239,7 +239,7 @@ export class SeederService implements OnModuleInit {
 
       // Obtener el estado ACTIVO
       const activeState = await this.userStateRepository.findOne({
-        where: { stateName: 'Activo' },
+        where: { stateName: 'ACTIVO' },
       });
 
       if (!activeState) {
@@ -250,7 +250,7 @@ export class SeederService implements OnModuleInit {
       }
 
       // Hashear la contraseña
-      const hashedPassword = await bcrypt.hash('admin123!', 10);
+      const hashedPassword = await bcrypt.hash('admin123', 10);
 
       // Crear usuario admin
       const adminUser = this.userRepository.create({
