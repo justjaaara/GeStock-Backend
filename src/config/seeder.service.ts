@@ -250,7 +250,7 @@ export class SeederService implements OnModuleInit {
       }
 
       // Hashear la contraseña
-      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const hashedPassword = await bcrypt.hash('admin123!', 10);
 
       // Crear usuario admin
       const adminUser = this.userRepository.create({
