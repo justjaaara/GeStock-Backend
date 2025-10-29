@@ -1,0 +1,150 @@
+# ============================================
+# EJEMPLO DE PAYLOAD PARA RFID ENDPOINT
+# ============================================
+# Este es el formato correcto que debe enviar 
+# el ESP32 o cualquier cliente HTTP
+# ============================================
+
+# Endpoint: POST http://tu-servidor:3000/api/rfid
+# Content-Type: application/json
+
+# PAYLOAD MÍNIMO REQUERIDO:
+{
+  "p_rfid_code": "AA:BB:CC:DD:EE",
+  "p_batch_desc": "Caja 24 unidades",
+  "p_product_code": "PROD-001",
+  "p_product_name": "Guantes Nitrilo Talla M",
+  "p_unit_price": 2500,
+  "p_category_id": 1,        # ← REQUERIDO (1 = categoría por defecto)
+  "p_measurement_id": 2,     # ← REQUERIDO (2 = Unidad)
+  "p_state_id": 1,           # ← REQUERIDO (1 = Activo)
+  "p_quantity": 24,
+  "p_reference": "RFID-ENTRADA-001",
+  "p_user_id": 1,
+  "p_movement_reason": "Recepción por RFID"
+}
+
+# ============================================
+# VALORES POR DEFECTO RECOMENDADOS
+# ============================================
+# p_category_id: 1  (asegúrate que exista en PRODUCT_CATEGORIES)
+# p_state_id: 1     (1 = Activo, asegúrate que exista en PRODUCT_STATES)
+# p_measurement_id: 2 (2 = Unidad, asegúrate que exista en MEASUREMENTS_TYPES)
+
+# ============================================
+# EJEMPLO DE RESPUESTA EXITOSA
+# ============================================
+{
+  "success": true,
+  "message": "Carga RFID procesada correctamente",
+  "data": {
+    "rfid_code": "AA:BB:CC:DD:EE",
+    "product_name": "Guantes Nitrilo Talla M",
+    "product_code": "PROD-001",
+    "quantity": 24,
+    "batch_desc": "Caja 24 unidades",
+    "timestamp": "2025-10-29T06:00:00.000Z"
+  }
+}
+
+# ============================================
+# EJEMPLO DE ERROR (falta p_category_id)
+# ============================================
+{
+  "success": false,
+  "message": "p_category_id es requerido (ej: 1 para categoría por defecto)"
+}
+
+# ============================================
+# CONSULTA SQL PARA VERIFICAR IDs VÁLIDOS
+# ============================================
+
+-- Ver categorías disponibles
+SELECT category_id, category_name FROM PRODUCT_CATEGORIES;
+
+-- Ver estados disponibles
+SELECT state_id, state_name FROM PRODUCT_STATES;
+
+-- Ver tipos de medida disponibles
+SELECT measurement_id, measurement_name FROM MEASUREMENTS_TYPES;
+
+# ============================================
+# EJEMPLO CON CURL (para probar desde terminal)
+# ============================================
+
+curl -X POST http://localhost:3000/api/rfid \
+  -H "Content-Type: application/json" \
+  -d '{
+    "p_rfid_code": "AA:BB:CC:DD:EE",
+    "p_batch_desc": "Caja 24 unidades",
+    "p_product_code": "PROD-001",
+    "p_product_name": "Guantes Nitrilo Talla M",
+    "p_unit_price": 2500,
+    "p_category_id": 1,
+    "p_measurement_id": 2,
+    "p_state_id": 1,
+    "p_quantity": 24,
+    "p_reference": "RFID-ENTRADA-001",
+    "p_user_id": 1,
+    "p_movement_reason": "Recepción por RFID"
+  }'
+
+# ============================================
+# EJEMPLO EN MICROPYTHON (ESP32)
+# ============================================
+
+import urequests
+import ujson
+
+def enviar_rfid(rfid_uid):
+    url = "http://192.168.1.100:3000/api/rfid"
+    
+    payload = {
+        "p_rfid_code": rfid_uid,
+        "p_batch_desc": "Caja ESP32",
+        "p_product_code": "ESP-" + rfid_uid,
+        "p_product_name": "Producto desde ESP32",
+        "p_unit_price": 1000,
+        "p_category_id": 1,        # ← IMPORTANTE: siempre enviar
+        "p_measurement_id": 2,     # ← IMPORTANTE: siempre enviar
+        "p_state_id": 1,           # ← IMPORTANTE: siempre enviar
+        "p_quantity": 10,
+        "p_reference": "ESP32-" + rfid_uid,
+        "p_user_id": 1,
+        "p_movement_reason": "Entrada desde ESP32"
+    }
+    
+    headers = {"Content-Type": "application/json"}
+    
+    try:
+        response = urequests.post(url, json=payload, headers=headers)
+        print("Status:", response.status_code)
+        print("Response:", response.text)
+        response.close()
+    except Exception as e:
+        print("Error:", str(e))
+
+# ============================================
+# POSTMAN COLLECTION EXAMPLE
+# ============================================
+
+POST http://localhost:3000/api/rfid
+
+Headers:
+  Content-Type: application/json
+
+Body (JSON):
+{
+  "p_rfid_code": "{{$randomUUID}}",
+  "p_batch_desc": "Lote de prueba",
+  "p_product_code": "TEST-{{$timestamp}}",
+  "p_product_name": "Producto de Prueba",
+  "p_unit_price": 1500,
+  "p_category_id": 1,
+  "p_measurement_id": 2,
+  "p_state_id": 1,
+  "p_quantity": 50,
+  "p_reference": "REF-{{$timestamp}}",
+  "p_user_id": 1,
+  "p_movement_reason": "Prueba desde Postman"
+}

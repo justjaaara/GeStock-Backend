@@ -1,0 +1,14 @@
+﻿{
+  \"p_rfid_code\": \"TEST-20251029011403\",
+  \"p_batch_desc\": \"Caja 24 unidades - Prueba\",
+  \"p_product_code\": \"PROD-TEST-001\",
+  \"p_product_name\": \"Producto de Prueba Postman\",
+  \"p_unit_price\": 2500,
+  \"p_category_id\": 1,
+  \"p_measurement_id\": 2,
+  \"p_state_id\": 1,
+  \"p_quantity\": 24,
+  \"p_reference\": \"REF-POSTMAN-20251029011403\",
+  \"p_user_id\": 1,
+  \"p_movement_reason\": \"Recepción por RFID - Prueba Postman\"
+}
