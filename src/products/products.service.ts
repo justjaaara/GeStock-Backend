@@ -318,6 +318,10 @@ export class ProductsService {
     const measurements = await this.measurementRepository.find({
       order: { measurementName: 'ASC' },
     });
+    console.log(
+      '🚀 ~ ProductsService ~ getAllMeasurementTypes ~ measurements:',
+      measurements,
+    );
 
     return measurements.map((measurement) => ({
       measurementId: measurement.measurementId,

@@ -175,7 +175,7 @@ export class ProductsController {
     return await this.productsService.getProductByCode(productCode);
   }
 
-  @Get('measurement-types')
+  @Get('measurement/measurement-types')
   @ApiOperation({
     summary: 'Obtener todos los tipos de medidas',
     description:
