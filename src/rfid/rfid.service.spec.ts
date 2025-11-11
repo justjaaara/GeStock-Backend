@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Logger } from '@nestjs/common';
 import { getDataSourceToken } from '@nestjs/typeorm';
 import { RfidService } from './rfid.service';
 import { RfidDto } from './dto/rfid.dto';
@@ -30,6 +31,19 @@ describe('RfidService', () => {
   });
 
   describe('processRfidLoad', () => {
+    let consoleErrorMock: jest.SpyInstance;
+    let loggerErrorMock: jest.SpyInstance;
+    beforeAll(() => {
+      // silenciamos console.error para evitar ruido en la salida CI cuando el test forza errores
+      consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
+      // silenciamos Logger.error del framework Nest para que no aparezcan errores esperados
+      loggerErrorMock = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+    });
+    afterAll(() => {
+      consoleErrorMock.mockRestore();
+      loggerErrorMock.mockRestore();
+    });
+
     it('debería procesar carga RFID exitosamente', async () => {
       const rfidDto: RfidDto = {
         p_rfid_code: 'RFID123',
