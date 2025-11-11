@@ -35,9 +35,13 @@ describe('RfidService', () => {
     let loggerErrorMock: jest.SpyInstance;
     beforeAll(() => {
       // silenciamos console.error para evitar ruido en la salida CI cuando el test forza errores
-      consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
+      consoleErrorMock = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
       // silenciamos Logger.error del framework Nest para que no aparezcan errores esperados
-      loggerErrorMock = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+      loggerErrorMock = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation(() => {});
     });
     afterAll(() => {
       consoleErrorMock.mockRestore();
