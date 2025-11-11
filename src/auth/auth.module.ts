@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { Role } from 'src/entities/Role.entity';
@@ -33,7 +33,7 @@ import { createMailConfig } from 'src/config/mail.config';
           signOptions: {
             expiresIn,
           },
-        };
+        } as JwtModuleOptions;
       },
       inject: [ConfigService],
     }),
