@@ -20,12 +20,21 @@ import { createMailConfig } from 'src/config/mail.config';
     UsersModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN', '24h'),
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const raw = configService.get<string>('JWT_EXPIRES_IN', '24h');
+        // jwt signOptions.expiresIn accepts number (seconds) or string like '24h'
+        // If the env value is numeric, convert to number; otherwise keep as string
+        const expiresIn: number | string = /^[0-9]+$/.test(String(raw))
+          ? Number(raw)
+          : raw;
+
+        return {
+          secret: configService.get<string>('JWT_SECRET'),
+          signOptions: {
+            expiresIn,
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     // Configuración de MailerModule para el servicio de correos
