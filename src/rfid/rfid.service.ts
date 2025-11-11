@@ -15,6 +15,7 @@ export class RfidService {
    * actualización de inventario y registro de movimiento.
    */
   async processRfidLoad(payload: RfidDto): Promise<any> {
+    console.log('Payload recibido en el servicio RFID:', payload);
     this.logger.log(`Procesando carga RFID: ${payload.p_rfid_code}`);
     this.logger.debug(`Payload completo: ${JSON.stringify(payload)}`);
 
